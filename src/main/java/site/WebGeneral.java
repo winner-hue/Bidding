@@ -162,9 +162,14 @@ public class WebGeneral extends Thread {
                 logger.error("插入数据错误：" + e, e);
             }
         }
+        logger.info("插入成功：" + count + " 条");
         //添加下一页
         if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
             try {
+                try {
+                    currentPage = Integer.parseInt(Util.match("index_(\\d+)", url)[1]);
+                } catch (Exception ignore) {
+                }
                 String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
                 if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
                     startRun(retryTime, nextPageUrl, (currentPage + 1));
