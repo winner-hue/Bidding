@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 import start.Bidding;
 import util.Util;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class CCGP_TianJin extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_TianJin.class);
@@ -18,19 +20,19 @@ public class CCGP_TianJin extends WebGeneral {
     protected void setValue() {
         titleRelu = "p font b";
         // 描述规则
-        descriptionRelu = "";
+        descriptionRelu = "meta[name='ColumnDescription']";
+
+        cityIdRelu = 3;
         // 采集类型id规则
-        catIdRelu = "";
+        catIdRelu = "div#crumbs";
         // 采购人规则
-        purchaserRelu = "";
-        // 价格规则
-        priceRelu = "";
+        purchaserRelu = "div:matchesOwn(1.采购人信息)+div";
         // 发布时间规则
         addTimeRelu = "span.time";
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        detailRelu = "td";
+        detailRelu = "div.pageInner > table";
         // 附件规则
         annexRelu = "td div a[target=_blank]";
         // 列表url节点规则
@@ -65,10 +67,10 @@ public class CCGP_TianJin extends WebGeneral {
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
         String nextPageUrl = "";
         try {
-            if(url.contains("&page=")){
+            if (url.contains("&page=")) {
                 Integer page = Integer.parseInt(Util.match("&page=(\\d+)", url)[1]);
-                nextPageUrl = url.replaceAll("&page=.*","")+"&page="+(page+1);
-            }else {
+                nextPageUrl = url.replaceAll("&page=.*", "") + "&page=" + (page + 1);
+            } else {
                 nextPageUrl = url + "&page=2";
             }
         } catch (Exception ignore) {
@@ -91,7 +93,7 @@ public class CCGP_TianJin extends WebGeneral {
     @Override
     protected String getPurchaser(Document parse) {
         try {
-            return parse.select("td:matchesOwn(采购人)+td").get(0).text();
+            return parse.select(purchaserRelu).get(0).text().replaceAll("名称：", "");
         } catch (Exception e) {
         }
         return null;
@@ -100,35 +102,42 @@ public class CCGP_TianJin extends WebGeneral {
     @Override
     protected String getPrice(Document parse) {
         try {
-            return parse.select("td:matchesOwn(合同金额)+td").get(0).text();
-        } catch (Exception e) {
-            try {
-                String html = parse.html();
-                if (html.contains("预算金额")) {
-                    return Jsoup.parse(Util.match("预算金额：(.*)", parse.html())[1]).text();
-                }
-            } catch (Exception ignore) {
+            String html = parse.html();
+            if (html.contains("预算金额")) {
+                return Jsoup.parse(Util.match("预算金额：(.*)", parse.html())[1]).text();
             }
+        } catch (Exception ignore) {
         }
         return null;
     }
 
     @Override
     protected String getAnnex(Document parse) {
+        List<String> pdfList = new ArrayList<String>();
         try {
             String href = parse.select(annexRelu).attr("href");
-            if(StrUtil.isEmpty(href)){
+            if (StrUtil.isEmpty(href)) {
                 href = parse.select("div:containsOwn(附件)+div").select("a").attr("href");
-                if(StrUtil.isEmpty(href)){
+                if (StrUtil.isEmpty(href)) {
                     href = parse.select("div:containsOwn(文件下载)+div").select("a").attr("href");
                 }
             }
-            if(StrUtil.isNotEmpty(href)){
+            if (StrUtil.isNotEmpty(href)) {
                 href = "http://www.ccgp-tianjin.gov.cn" + href;
+                pdfList.add(href);
             }
-            return href;
-        } catch (Exception e) {
+            return pdfList.toString();
+        } catch (Exception ignore) {
         }
         return null;
+    }
+
+    @Override
+    protected String getDescription(Document parse) {
+        try {
+            return parse.select(this.descriptionRelu).get(0).attr("content");
+        } catch (Exception e) {
+            return "";
+        }
     }
 }

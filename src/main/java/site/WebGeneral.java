@@ -197,7 +197,7 @@ public class WebGeneral extends Thread {
         int catId = getCatId(parse);
         logger.info("catId: " + catId);
         data.setCat_id(catId);
-        int cityId = 1;
+        int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         data.setCity_id(cityId);
         String purchaser = getPurchaser(parse);
@@ -215,6 +215,12 @@ public class WebGeneral extends Thread {
     }
 
 
+    /**
+     * 获取附件
+     *
+     * @param parse
+     * @return
+     */
     protected String getAnnex(Document parse) {
         List<String> pdfList = new ArrayList<String>();
         try {
@@ -316,7 +322,7 @@ public class WebGeneral extends Thread {
 
         if (text == null) {
             return catId;
-        } else if (text.contains("招标公告")) {
+        } else if (text.contains("招标公告") || text.contains("采购公告")) {
             catId = 1;
         } else if (text.contains("询价")) {
             catId = 2;
@@ -336,11 +342,11 @@ public class WebGeneral extends Thread {
             catId = 9;
         } else if (text.contains("竞争性磋商")) {
             catId = 10;
-        } else if (text.contains("成交")) {
+        } else if (text.contains("成交") || text.contains("采购结果") || text.contains("合同及验收")) {
             catId = 11;
         } else if (text.contains("终止") || text.contains("合同公告")) {
             catId = 12;
-        } else if (text.contains("招标预告")) {
+        } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向")) {
             catId = 13;
         } else if (text.contains("竞价")) {
             catId = 14;
