@@ -42,6 +42,13 @@ public class Download {
         String httpBody = null;
         for (int i = 0; i < retryTime; i++) {
             httpBody = download(url, "UTF-8");
+            try {
+                String property = Bidding.properties.getProperty("download.sleep");
+                if (property != null || "".equals(property)) {
+                    Thread.sleep(Integer.parseInt(property) * 1000);
+                }
+            } catch (Exception ignore) {
+            }
             if (httpBody == null) {
                 continue;
             }
