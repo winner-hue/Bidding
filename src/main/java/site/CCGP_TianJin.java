@@ -58,7 +58,12 @@ public class CCGP_TianJin extends WebGeneral {
         }
         String url = null;
         if (!href.startsWith("http")) {
-            url = "http://www.ccgp-tianjin.gov.cn" + href;
+            if (Util.isMatch("viewer.do\\?id=\\d+", href)) {
+                String id = Util.match("viewer.do\\?id=(\\d+)", href)[1];
+                url = "http://www.ccgp-tianjin.gov.cn/portal/documentView.do?method=view&id=" + id + "&ver=2";
+            } else {
+                url = "http://www.ccgp-tianjin.gov.cn" + href;
+            }
         }
         return url;
     }

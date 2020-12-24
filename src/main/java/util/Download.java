@@ -18,10 +18,19 @@ import po.Proxy;
 import start.Bidding;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class Download {
     private static Logger logger = LoggerFactory.getLogger(Download.class);
     private static Proxy proxy = new Proxy();
+    private static String userAgent[] = {
+            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 OPR/26.0.1656.60",
+            "Mozilla/5.0 (Windows NT 5.1; U; en; rv:1.8.1) Gecko/20061208 Firefox/2.0.0 Opera 9.50",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko"
+    };
 
     static {
         String host = Bidding.properties.getProperty("proxy.host");
@@ -60,7 +69,7 @@ public class Download {
     public static String download(String url, String charSet) {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36");
+        httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
             RequestConfig config = RequestConfig.custom().setProxy(host).build();

@@ -38,6 +38,10 @@ public class Util {
         return props;
     }
 
+    public static boolean isMatch(String pattern, String content) {
+        Matcher m = Pattern.compile(pattern).matcher(content);
+        return m.find();
+    }
 
     public static String[] match(String pattern, String content) {
         Matcher m = Pattern.compile(pattern).matcher(content);
