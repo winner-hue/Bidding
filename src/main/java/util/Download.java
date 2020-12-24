@@ -72,7 +72,7 @@ public class Download {
         httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(5000).setConnectTimeout(5000).setSocketTimeout(5000).build();
             httpGet.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
