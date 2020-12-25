@@ -139,12 +139,12 @@ public class WebGeneral extends Thread {
             return;
         }
         Document document = Jsoup.parse(httpBody);
-        List<StructData> allResult = getAllResult(document);
+        List<StructData> allResult = getAllResult(document, httpBody);
         for (StructData data : allResult) {
             String tempUrl = data.getUrl();
             String pageSource = getHttpBody(retryTime, tempUrl);
             Document parse = Jsoup.parse(pageSource);
-            extract(parse, data);
+            extract(parse, data, pageSource);
         }
         int count = 0;
         for (StructData resultData : allResult) {
@@ -186,7 +186,7 @@ public class WebGeneral extends Thread {
      * @param parse
      * @param data
      */
-    protected void extract(Document parse, StructData data) {
+    protected void extract(Document parse, StructData data, String pageSource) {
         logger.info("==================================");
         String title = getTitle(parse);
         logger.info("title: " + title);
@@ -322,7 +322,7 @@ public class WebGeneral extends Thread {
 
         if (text == null) {
             return catId;
-        } else if (text.contains("招标公告") || text.contains("采购公告")) {
+        } else if (text.contains("招标公告") || text.contains("采购公告") || text.contains("公开招标")) {
             catId = 1;
         } else if (text.contains("询价")) {
             catId = 2;
@@ -332,7 +332,7 @@ public class WebGeneral extends Thread {
             catId = 4;
         } else if (text.contains("资格预审")) {
             catId = 5;
-        } else if (text.contains("邀请招标")) {
+        } else if (text.contains("邀请招标") || text.contains("邀请公告")) {
             catId = 6;
         } else if (text.contains("中标")) {
             catId = 7;
@@ -348,7 +348,7 @@ public class WebGeneral extends Thread {
             catId = 12;
         } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向")) {
             catId = 13;
-        } else if (text.contains("竞价")) {
+        } else if (text.contains("竞价") || text.contains("网上询价")) {
             catId = 14;
         }
 
@@ -431,7 +431,7 @@ public class WebGeneral extends Thread {
      * @param parse
      * @return
      */
-    protected List<StructData> getAllResult(Document parse) {
+    protected List<StructData> getAllResult(Document parse, String httpBody) {
 
         List<StructData> allResults = new ArrayList<StructData>();
         Elements cListBid = parse.select(this.nodeListRelu);

@@ -1,4 +1,5 @@
 import site.CCGP_BeiJing;
+import site.CCGP_ChongQing;
 import site.CCGP_TianJin;
 import util.Download;
 
@@ -8,7 +9,8 @@ public class GetData {
 
     public static void main(String[] args) throws Exception {
 //        new CCGP_BeiJing().start();
-        new CCGP_TianJin().start();
+//        new CCGP_TianJin().start();
+        new CCGP_ChongQing().start();
     }
 
 }

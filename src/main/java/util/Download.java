@@ -59,6 +59,7 @@ public class Download {
             } catch (Exception ignore) {
             }
             if (httpBody == null) {
+                logger.info("当前重试下载次数为：" + i + " " + url);
                 continue;
             }
             break;
@@ -85,7 +86,7 @@ public class Download {
             HttpEntity entity = response.getEntity();
             String httpBody = EntityUtils.toString(entity, charSet);
             return httpBody;
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error(url + " 下载失败：" + e, e);
         }
         return null;
