@@ -157,6 +157,7 @@ public class WebGeneral extends Thread {
                     sql = Util.getInsertSql(tableName, StructData.class, resultData);
                 }
                 SqlPool.getInstance().getStatement().execute(sql);
+                logger.info("当前插入第：" + count + " 条");
                 ++count;
             } catch (SQLException e) {
                 logger.error("插入数据错误：" + e, e);
@@ -322,7 +323,7 @@ public class WebGeneral extends Thread {
 
         if (text == null) {
             return catId;
-        } else if (text.contains("招标公告") || text.contains("采购公告") || text.contains("公开招标")) {
+        } else if (text.contains("招标公告") || text.contains("采购公告") || text.contains("公开招标") || text.contains("招标(采购)公告")) {
             catId = 1;
         } else if (text.contains("询价")) {
             catId = 2;
@@ -342,11 +343,11 @@ public class WebGeneral extends Thread {
             catId = 9;
         } else if (text.contains("竞争性磋商")) {
             catId = 10;
-        } else if (text.contains("成交") || text.contains("采购结果") || text.contains("合同及验收")) {
+        } else if (text.contains("成交") || text.contains("采购结果") || text.contains("合同及验收") || text.contains("验收结果")) {
             catId = 11;
         } else if (text.contains("终止") || text.contains("合同公告")) {
             catId = 12;
-        } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向")) {
+        } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向") || text.contains("需求公示") || text.contains("招标预公告")) {
             catId = 13;
         } else if (text.contains("竞价") || text.contains("网上询价")) {
             catId = 14;
@@ -402,6 +403,8 @@ public class WebGeneral extends Thread {
         String url = null;
         if (!href.startsWith("http")) {
             url = this.baseUrl + href;
+        } else {
+            url = href;
         }
         return url;
     }
@@ -423,7 +426,6 @@ public class WebGeneral extends Thread {
         }
         return parse;
     }
-
 
     /**
      * 获取列表中所有详文url
