@@ -101,4 +101,15 @@ public class CCGP_BeiJing extends WebGeneral {
         }
         return null;
     }
+
+    @Override
+    protected int getCatId(Document parse) {
+        try {
+            String text = parse.select(this.catIdRelu).get(0).text();
+            String[] split = text.split("->");
+            return getCatIdByText(split[split.length - 1]);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
 }

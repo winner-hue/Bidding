@@ -11,18 +11,33 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import po.Proxy;
 import start.Bidding;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -109,8 +124,8 @@ public class Download {
             httpPost.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
-                provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials("username", "password"));
-                httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).build();
+                provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
+                httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         }
         try {
@@ -125,6 +140,7 @@ public class Download {
     }
 
     public static String downGet(String url, String charSet) {
+
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
@@ -134,8 +150,8 @@ public class Download {
             httpGet.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
-                provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials("username", "password"));
-                httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).build();
+                provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
+                httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         }
         try {
@@ -149,7 +165,24 @@ public class Download {
         return null;
     }
 
+    private static SSLConnectionSocketFactory customSSLConnection() {
+        try {
+            SSLContext sslcontext = SSLContexts.custom()
+                    .loadTrustMaterial(new TrustStrategy() {
+                        @Override
+                        public boolean isTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                            return true;
+                        }
+                    })
+                    .build();
+            SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslcontext);
+            return sslConnectionSocketFactory;
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
-        System.out.println(downPost("http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getPubInfoList&t_k=null&tk=0.33597649210232605&#44current=1&rowCount=10&searchPhrase=&infoTypeCode=1001&privateOrCity=1", "utf-8"));
+        System.out.println(downGet("https://www.toutiao.com", "utf-8"));
     }
 }

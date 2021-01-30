@@ -1,0 +1,179 @@
+package site;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import po.StructData;
+import start.Bidding;
+import util.Util;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class CCGP_HuNan extends WebGeneral {
+    private static Logger logger = LoggerFactory.getLogger(CCGP_HeNan.class);
+
+    @Override
+    protected void setValue() {
+        titleRelu = "p.danyi_title";
+        priceRelu = "td:matchesOwn(预算金额：)";
+        detailRelu = "tbody tr";
+        cityIdRelu = 8;
+    }
+
+    @Override
+    public void run() {
+        // 获取任务url
+        setValue();
+        String[] urlsTemp = Bidding.properties.getProperty("ccgp.hunan.url").split(",");
+        String[] urls = new String[urlsTemp.length];
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String endDate = format.format(new Date(System.currentTimeMillis()));
+        String startDate = format.format(new Date(System.currentTimeMillis() - 3 * 30 * 24 * 60 * 60 * 1000L));
+        for (int i = 0; i < urlsTemp.length; i++) {
+            urls[i] = urlsTemp[i] + "&#44pType=&prcmPrjName=&prcmItemCode=&prcmOrgName=&startDate=" + startDate + "&endDate=" + endDate + "&prcmPlanNo=&page=1&pageSize=18";
+        }
+        this.main(urls);
+        Bidding.cout.decrementAndGet();
+    }
+
+    @Override
+    protected List<StructData> getAllResult(Document parse, String httpBody) {
+        List<StructData> allResults = new ArrayList<StructData>();
+        try {
+            JSONArray rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
+            for (int i = 0; i < rows.size(); i++) {
+                logger.info("===========================================");
+                JSONObject jo = rows.getJSONObject(i);
+                StructData resultData = new StructData();
+                try {
+                    String noticeId = jo.getString("NOTICE_ID");
+                    String url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId + "&area_id=";
+                    logger.info("url: " + url);
+                    resultData.setUrl(url);
+                    String md5 = Util.stringToMD5(url);
+                    logger.info("md5: " + md5);
+                    resultData.setMd5(md5);
+                } catch (Exception e) {
+                    continue;
+                }
+                try {
+                    String newworkDateAll = jo.getJSONObject("NEWWORK_DATE_ALL").getString("time");
+                    Date addTime = new Date(Long.parseLong(newworkDateAll));
+                    logger.info("addTime: " + addTime);
+                    if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                        logger.info("发布时间早于截止时间， 不添加该任务url");
+                        continue;
+                    }
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    resultData.setAdd_time(format.format(addTime));
+                } catch (Exception ignore) {
+                }
+
+                int catIdByText = -1;
+                try {
+                    String catId = jo.getString("NOTICE_NAME");
+                    catIdByText = getCatIdByText(catId);
+                    logger.info("catId: " + catIdByText);
+                } catch (Exception ignore) {
+                }
+                resultData.setCat_id(catIdByText);
+                logger.info("cityId: " + this.cityIdRelu);
+                resultData.setCity_id(this.cityIdRelu);
+                allResults.add(resultData);
+            }
+        } catch (Exception e) {
+            logger.error("获取json失败：" + e, e);
+        }
+        return allResults;
+    }
+
+    @Override
+    protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
+        String nextPageUrl = "";
+        try {
+            String id = Util.match("page=(\\d+)", url)[1];
+            nextPageUrl = url.replaceAll("page=\\d+", "page=" + (Integer.parseInt(id) + 1));
+        } catch (Exception ignore) {
+        }
+        logger.info("nextPageUrl: " + nextPageUrl);
+        return nextPageUrl;
+    }
+
+    @Override
+    protected String getPrice(Document parse) {
+        try {
+            return parse.select(this.priceRelu).get(0).text().replaceAll("预算金额：", "");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    @Override
+    protected String getDetail(Document parse) {
+        try {
+            String content = "";
+            try {
+                Elements elements = parse.select(detailRelu);
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < elements.size(); i++) {
+                    if (i > 0) {
+                        builder.append(elements.get(i).text());
+                    }
+                }
+                content = builder.toString();
+            } catch (Exception ignore) {
+            }
+            return content;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    @Override
+    protected void extract(Document parse, StructData data, String pageSource) {
+        logger.info("==================================");
+        String title = getTitle(parse);
+        logger.info("title: " + title);
+        data.setTitle(title);
+        String description = getDescription(parse);
+        logger.info("description: " + description);
+        data.setDescription(description);
+        int cityId = cityIdRelu;
+        logger.info("cityId: " + cityId);
+        data.setCity_id(cityId);
+        String purchaser = getPurchaser(parse);
+        logger.info("purchaser: " + purchaser);
+        data.setPurchaser(purchaser);
+        String price = getPrice(parse);
+        logger.info("price: " + price);
+        data.setPrice(price);
+        String detail = getDetail(parse);
+        logger.info("detail: " + detail);
+        data.setDetail(detail);
+        String annex = getAnnex(parse);
+        logger.info("annex: " + annex);
+        data.setAnnex(annex);
+    }
+
+    @Override
+    protected String getTitle(Document parse) {
+        String title;
+        try {
+            title = parse.select(this.titleRelu).get(0).text();
+        } catch (Exception e) {
+            try {
+                title = parse.select("h1").get(0).text();
+            } catch (Exception ignore) {
+                title = "";
+            }
+        }
+        return title;
+    }
+}
