@@ -12,7 +12,7 @@ import java.util.Date;
 
 
 /**
- * 该站点有反扒措施，访问快会线程卡死
+ * 该站点有反扒措施，访问快会线程卡死, 山西
  */
 public class CCGP_ShangXi extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_ShangXi.class);
@@ -38,7 +38,7 @@ public class CCGP_ShangXi extends WebGeneral {
     public void run() {
         // 获取任务url
         setValue();
-        String[] urls = Bidding.properties.getProperty("ccgp.shanxi.url").split(",");
+        String[] urls = Bidding.properties.getProperty("ccgp.shangxi.url").split(",");
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }

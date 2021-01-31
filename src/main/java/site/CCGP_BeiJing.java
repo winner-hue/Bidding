@@ -19,7 +19,7 @@ public class CCGP_BeiJing extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div.div_hui";
         // 城市id规则
-
+        cityIdRelu = 1;
         // 采购人规则
         purchaserRelu = "";
         // 价格规则
@@ -107,6 +107,7 @@ public class CCGP_BeiJing extends WebGeneral {
         try {
             String text = parse.select(this.catIdRelu).get(0).text();
             String[] split = text.split("->");
+
             return getCatIdByText(split[split.length - 1]);
         } catch (Exception e) {
             return -1;

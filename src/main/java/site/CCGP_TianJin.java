@@ -121,23 +121,7 @@ public class CCGP_TianJin extends WebGeneral {
 
     @Override
     protected String getAnnex(Document parse) {
-        List<String> pdfList = new ArrayList<String>();
-        try {
-            String href = parse.select(annexRelu).attr("href");
-            if (StrUtil.isEmpty(href)) {
-                href = parse.select("div:containsOwn(附件)+div").select("a").attr("href");
-                if (StrUtil.isEmpty(href)) {
-                    href = parse.select("div:containsOwn(文件下载)+div").select("a").attr("href");
-                }
-            }
-            if (StrUtil.isNotEmpty(href)) {
-                href = "http://www.ccgp-tianjin.gov.cn" + href;
-                pdfList.add(href);
-            }
-            return pdfList.toString();
-        } catch (Exception ignore) {
-        }
-        return null;
+        return "";
     }
 
     @Override
