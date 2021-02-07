@@ -28,7 +28,7 @@ public class CCGP_HaiNan extends WebGeneral {
         // 价格规则
         priceRelu = "span i";
         // 内容规则
-        detailRelu = "div.content01";
+        fullcontentRelu = "div.content01";
         // 列表url节点规则
         nodeListRelu = "div.index07_07_02 ul li";
         // 城市代码
@@ -61,20 +61,19 @@ public class CCGP_HaiNan extends WebGeneral {
                 // 获取链接
                 String url = getUrl(element);
                 logger.info("url: " + url);
-                resultData.setUrl(url);
+                resultData.setArticleurl(url);
                 // 获取链接md5值， 用于排重
                 String md5 = Util.stringToMD5(url);
                 logger.info("md5: " + md5);
-                resultData.setMd5(md5);
+                //resultData.setMd5(md5);
                 // 获取发布时间
-                Date addTime = getAddTime(element);
+                long addTime = getAddTime(element).getTime();
                 logger.info("addTime: " + addTime);
-                if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                resultData.setAdd_time(format.format(addTime));
+                resultData.setAdd_time(addTime);
                 resultData.setCity_id(this.cityIdRelu);
 
                 String price = getPrice(Jsoup.parse(element.html()));
@@ -103,16 +102,16 @@ public class CCGP_HaiNan extends WebGeneral {
         int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         data.setCity_id(cityId);
-        String purchaser = getPurchaser(parse);
+        String purchaser = getAuthor(parse);
         logger.info("purchaser: " + purchaser);
-        data.setPurchaser(purchaser);
+        data.setAuthor(purchaser);
 
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 
     @Override

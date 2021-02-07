@@ -25,7 +25,7 @@ public class CCGP_NeiMengGu extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div.title-box p";
         // 内容规则
-        detailRelu = "div#content-box-1";
+        fullcontentRelu = "div#content-box-1";
         // 列表url节点规则
         nodeListRelu = "div.index07_07_02 ul li";
         // 城市代码
@@ -70,10 +70,10 @@ public class CCGP_NeiMengGu extends WebGeneral {
                     String type = jo.getString("type");
                     String url = "http://www.nmgp.gov.cn/category/cggg?tb_id=" + ayTableTag + "&p_id=" + wpMarkId + "&type=" + type;
                     logger.info("url: " + url);
-                    resultData.setUrl(url);
+                    resultData.setArticleurl(url);
                     String md5 = Util.stringToMD5(url);
                     logger.info("md5: " + md5);
-                    resultData.setMd5(md5);
+                    //resultData.setMd5(md5);
                     if (Util.isMatch("type_name=1", baseUrl)) {
                         logger.info("catId: " + 1);
                         resultData.setCat_id(1);
@@ -110,13 +110,13 @@ public class CCGP_NeiMengGu extends WebGeneral {
                     String subdate = jo.getString("SUBDATE");
                     subdate = Util.match("\\d+-\\d+-\\d+", subdate)[0];
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    Date addTime = format.parse(subdate);
+                    long addTime = format.parse(subdate).getTime();
                     logger.info("addTime: " + addTime);
-                    if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                    if (addTime - this.deadDate.getTime() < 0) {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }
-                    resultData.setAdd_time(subdate);
+                    resultData.setAdd_time(addTime);
                 } catch (Exception ignore) {
                 }
 
@@ -148,9 +148,9 @@ public class CCGP_NeiMengGu extends WebGeneral {
         data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 }

@@ -23,7 +23,7 @@ public class CCGP_HuNan extends WebGeneral {
     protected void setValue() {
         titleRelu = "p.danyi_title";
         priceRelu = "td:matchesOwn(预算金额：)";
-        detailRelu = "tbody tr";
+        fullcontentRelu = "tbody tr";
         cityIdRelu = 8;
     }
 
@@ -56,23 +56,21 @@ public class CCGP_HuNan extends WebGeneral {
                     String noticeId = jo.getString("NOTICE_ID");
                     String url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId + "&area_id=";
                     logger.info("url: " + url);
-                    resultData.setUrl(url);
+                    resultData.setArticleurl(url);
                     String md5 = Util.stringToMD5(url);
                     logger.info("md5: " + md5);
-                    resultData.setMd5(md5);
+//                    //resultData.setMd5(md5);
                 } catch (Exception e) {
                     continue;
                 }
                 try {
-                    String newworkDateAll = jo.getJSONObject("NEWWORK_DATE_ALL").getString("time");
-                    Date addTime = new Date(Long.parseLong(newworkDateAll));
-                    logger.info("addTime: " + addTime);
-                    if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                    long newworkDateAll = jo.getJSONObject("NEWWORK_DATE_ALL").getLong("time");
+                    logger.info("addTime: " + newworkDateAll);
+                    if (newworkDateAll - this.deadDate.getTime() < 0) {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    resultData.setAdd_time(format.format(addTime));
+                    resultData.setAdd_time(newworkDateAll);
                 } catch (Exception ignore) {
                 }
 
@@ -120,7 +118,7 @@ public class CCGP_HuNan extends WebGeneral {
         try {
             String content = "";
             try {
-                Elements elements = parse.select(detailRelu);
+                Elements elements = parse.select(fullcontentRelu);
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < elements.size(); i++) {
                     if (i > 0) {
@@ -148,18 +146,18 @@ public class CCGP_HuNan extends WebGeneral {
         int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         data.setCity_id(cityId);
-        String purchaser = getPurchaser(parse);
-        logger.info("purchaser: " + purchaser);
-        data.setPurchaser(purchaser);
+        String author = getAuthor(parse);
+        logger.info("author: " + author);
+        data.setAuthor(author);
         String price = getPrice(parse);
         logger.info("price: " + price);
         data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 
     @Override

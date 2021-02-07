@@ -27,7 +27,7 @@ public class CCGP_ShangXi extends WebGeneral {
         // 价格规则
         priceRelu = "p:matchesOwn(预算金额)";
         // 内容规则
-        detailRelu = "div.c_bodyDiv";
+        fullcontentRelu = "div.c_bodyDiv";
         // 列表url节点规则
         nodeListRelu = "table#node_list tbody tr";
         // 城市代码

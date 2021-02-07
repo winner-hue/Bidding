@@ -27,14 +27,14 @@ public class WebGeneral extends Thread {
     protected String baseUrl = "";
     // 标题规则
     protected String titleRelu = "";
-    // 描述规则
+    // 描述、简介规则
     protected String descriptionRelu = "";
     // 采集类型id规则
     protected String catIdRelu;
     // 城市id规则
     protected int cityIdRelu;
-    // 采购人规则
-    protected String purchaserRelu = "";
+    // 采购人、作者规则
+    protected String authorRelu = "";
     // 价格规则
     protected String priceRelu = "";
     // 发布时间规则
@@ -42,9 +42,9 @@ public class WebGeneral extends Thread {
     // 发布时间匹配规则
     protected String addTimeParse = "yyyy-MM-dd";
     // 内容规则
-    protected String detailRelu = "";
+    protected String fullcontentRelu = "";
     // 附件规则
-    protected String annexRelu = "";
+    protected String fjxxurlRelu = "";
     // 列表url节点规则
     protected String nodeListRelu = "";
     // 设置截止时间
@@ -141,7 +141,7 @@ public class WebGeneral extends Thread {
         Document document = Jsoup.parse(httpBody);
         List<StructData> allResult = getAllResult(document, httpBody);
         for (StructData data : allResult) {
-            String tempUrl = data.getUrl();
+            String tempUrl = data.getArticleurl();
             String pageSource = getHttpBody(retryTime, tempUrl);
             Document parse = Jsoup.parse(pageSource);
             extract(parse, data, pageSource);
@@ -201,18 +201,18 @@ public class WebGeneral extends Thread {
         int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         data.setCity_id(cityId);
-        String purchaser = getPurchaser(parse);
-        logger.info("purchaser: " + purchaser);
-        data.setPurchaser(purchaser);
+        String author = getAuthor(parse);
+        logger.info("author: " + author);
+        data.setAuthor(author);
         String price = getPrice(parse);
         logger.info("price: " + price);
         data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 
 
@@ -257,7 +257,7 @@ public class WebGeneral extends Thread {
     protected String getDetail(Document parse) {
         try {
             String content = "";
-            for (String relu : this.detailRelu.split("\\|")) {
+            for (String relu : this.fullcontentRelu.split("\\|")) {
                 try {
                     content = content + parse.select(relu.trim()).get(0).text();
                 } catch (Exception ignore) {
@@ -289,9 +289,9 @@ public class WebGeneral extends Thread {
      * @param parse
      * @return
      */
-    protected String getPurchaser(Document parse) {
+    protected String getAuthor(Document parse) {
         try {
-            return parse.select(this.purchaserRelu).get(0).text();
+            return parse.select(this.authorRelu).get(0).text();
         } catch (Exception e) {
             return "";
         }
@@ -444,20 +444,19 @@ public class WebGeneral extends Thread {
                 // 获取链接
                 String url = getUrl(element);
                 logger.info("url: " + url);
-                resultData.setUrl(url);
+                resultData.setArticleurl(url);
                 // 获取链接md5值， 用于排重
                 String md5 = Util.stringToMD5(url);
                 logger.info("md5: " + md5);
-                resultData.setMd5(md5);
+                //resultData.setMd5(md5);
                 // 获取发布时间
-                Date addTime = getAddTime(element);
+                long addTime = getAddTime(element).getTime();
                 logger.info("addTime: " + addTime);
-                if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                resultData.setAdd_time(format.format(addTime));
+                resultData.setAdd_time(addTime);
                 resultData.setCity_id(this.cityIdRelu);
                 allResults.add(resultData);
             } catch (Exception e) {

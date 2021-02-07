@@ -23,8 +23,8 @@ public class CCGP_HuBei extends WebGeneral {
         priceRelu = "p:matchesOwn(预算金额：) span";
         addTimeRelu = "span";
         addTimeParse = "yyyy-MM-dd";
-        detailRelu = "div[style='margin: 0 22px;']";
-        annexRelu = "ul.list-unstyled.details-ul a";
+        fullcontentRelu = "div[style='margin: 0 22px;']";
+        fjxxurlRelu = "ul.list-unstyled.details-ul a";
         nodeListRelu = "ul.news-list-content.list-unstyled li";
         cityIdRelu = 7;
         catIdRelu = "li.active";
@@ -96,7 +96,7 @@ public class CCGP_HuBei extends WebGeneral {
 
         List<String> pdfList = new ArrayList<String>();
         try {
-            Elements pdfs = parse.select(annexRelu);
+            Elements pdfs = parse.select(fjxxurlRelu);
             for (Element pdf : pdfs) {
                 try {
                     String href = pdf.attr("href");

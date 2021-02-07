@@ -29,15 +29,15 @@ public class CCGP_TianJin extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div#crumbs";
         // 采购人规则
-        purchaserRelu = "div:matchesOwn(1.采购人信息)+div";
+        authorRelu = "div:matchesOwn(1.采购人信息)+div";
         // 发布时间规则
         addTimeRelu = "span.time";
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        detailRelu = "div.pageInner > table";
+        fullcontentRelu = "div.pageInner > table";
         // 附件规则
-        annexRelu = "td div a[target=_blank]";
+        fjxxurlRelu = "td div a[target=_blank]";
         // 列表url节点规则
         nodeListRelu = "ul.dataList li";
     }
@@ -99,9 +99,9 @@ public class CCGP_TianJin extends WebGeneral {
     }
 
     @Override
-    protected String getPurchaser(Document parse) {
+    protected String getAuthor(Document parse) {
         try {
-            return parse.select(purchaserRelu).get(0).text().replaceAll("名称：", "");
+            return parse.select(authorRelu).get(0).text().replaceAll("名称：", "");
         } catch (Exception e) {
         }
         return null;

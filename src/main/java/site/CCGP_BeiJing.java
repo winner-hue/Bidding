@@ -21,7 +21,7 @@ public class CCGP_BeiJing extends WebGeneral {
         // 城市id规则
         cityIdRelu = 1;
         // 采购人规则
-        purchaserRelu = "";
+        authorRelu = "";
         // 价格规则
         priceRelu = "";
         // 发布时间规则
@@ -29,9 +29,9 @@ public class CCGP_BeiJing extends WebGeneral {
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        detailRelu = "table#queryTable|div[align=left]";
+        fullcontentRelu = "table#queryTable|div[align=left]";
         // 附件规则
-        annexRelu = "table#queryTable a";
+        fjxxurlRelu = "table#queryTable a";
         // 列表url节点规则
         nodeListRelu = "ul.xinxi_ul li";
     }
@@ -75,7 +75,7 @@ public class CCGP_BeiJing extends WebGeneral {
     }
 
     @Override
-    protected String getPurchaser(Document parse) {
+    protected String getAuthor(Document parse) {
         try {
             return parse.select("td:matchesOwn(采购人)+td").get(0).text();
         } catch (Exception e) {

@@ -28,8 +28,8 @@ public class CCGP_HeNan extends WebGeneral {
         priceRelu = "td:matchesOwn(项目预算金额：)";
         addTimeRelu = "span.Gray.Right";
         addTimeParse = "yyyy-MM-dd HH:mm";
-        detailRelu = "table.Content";
-        annexRelu = "div.List1.Top5 a";
+        fullcontentRelu = "table.Content";
+        fjxxurlRelu = "div.List1.Top5 a";
         nodeListRelu = "div.List2 li";
         cityIdRelu = 6;
         catIdRelu = "a";
@@ -100,7 +100,7 @@ public class CCGP_HeNan extends WebGeneral {
     protected String getAnnex(Document parse) {
         List<String> pdfList = new ArrayList<String>();
         try {
-            Elements elements = parse.select(annexRelu);
+            Elements elements = parse.select(fjxxurlRelu);
             for (int i = 0; i < elements.size(); i++) {
                 String href = elements.get(i).attr("href");
                 if (!href.startsWith("http")) {
@@ -125,10 +125,10 @@ public class CCGP_HeNan extends WebGeneral {
                 // 获取链接
                 String url = getUrl(element);
                 logger.info("url: " + url);
-                resultData.setUrl(url);
+                resultData.setArticleurl(url);
 
                 logger.info("annex: " + fujian);
-                resultData.setAnnex(fujian);
+                resultData.setFjxxurl(fujian);
 
                 String title = getTitle(Jsoup.parse(element.html()));
                 logger.info("title: " + title);
@@ -141,16 +141,15 @@ public class CCGP_HeNan extends WebGeneral {
                 // 获取链接md5值， 用于排重
                 String md5 = Util.stringToMD5(url);
                 logger.info("md5: " + md5);
-                resultData.setMd5(md5);
+                //resultData.setMd5(md5);
                 // 获取发布时间
-                Date addTime = getAddTime(element);
+                long addTime = getAddTime(element).getTime();
                 logger.info("addTime: " + addTime);
-                if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                resultData.setAdd_time(format.format(addTime));
+                resultData.setAdd_time(addTime);
                 resultData.setCity_id(this.cityIdRelu);
                 allResults.add(resultData);
             } catch (Exception e) {
@@ -171,15 +170,15 @@ public class CCGP_HeNan extends WebGeneral {
         int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         data.setCity_id(cityId);
-        String purchaser = getPurchaser(parse);
+        String purchaser = getAuthor(parse);
         logger.info("purchaser: " + purchaser);
-        data.setPurchaser(purchaser);
+        data.setAuthor(purchaser);
         String price = getPrice(parse);
         logger.info("price: " + price);
         data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
 
     }
 }

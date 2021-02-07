@@ -25,7 +25,7 @@ public class CCGP_HeBei extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "td#navi";
         // 采购人规则
-        purchaserRelu = "span.txt:nth-child(3)";
+        authorRelu = "span.txt:nth-child(3)";
         // 价格规则
         priceRelu = "span#amt";
         // 发布时间规则
@@ -33,9 +33,9 @@ public class CCGP_HeBei extends WebGeneral {
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        detailRelu = "span.txt7";
+        fullcontentRelu = "span.txt7";
         // 附件规则
-        annexRelu = "span[id^=fujian_]";
+        fjxxurlRelu = "span[id^=fujian_]";
         // 列表url节点规则
         nodeListRelu = "table#moredingannctable td.txt1";
         // 城市代码
@@ -64,24 +64,23 @@ public class CCGP_HeBei extends WebGeneral {
                 // 获取链接
                 String url = getUrl(urlsList.get(i));
                 logger.info("url: " + url);
-                resultData.setUrl(url);
+                resultData.setArticleurl(url);
                 // 获取链接md5值， 用于排重
                 String md5 = Util.stringToMD5(url);
                 logger.info("md5: " + md5);
-                resultData.setMd5(md5);
+                //resultData.setMd5(md5);
                 // 获取发布时间
-                Date addTime = getAddTime(element);
+                long addTime = getAddTime(element).getTime();
                 logger.info("addTime: " + addTime);
-                if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                resultData.setAdd_time(format.format(addTime));
+                resultData.setAdd_time(addTime);
                 resultData.setCity_id(this.cityIdRelu);
 
-                String purchaser = getPurchaser(parse);
-                resultData.setPurchaser(purchaser);
+                String purchaser = getAuthor(parse);
+                resultData.setAuthor(purchaser);
                 logger.info("purchaser: " + purchaser);
                 allResults.add(resultData);
             } catch (Exception e) {
@@ -111,10 +110,10 @@ public class CCGP_HeBei extends WebGeneral {
         data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 
     @Override

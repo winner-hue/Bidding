@@ -22,7 +22,7 @@ public class CCGP_LiaoNing extends WebGeneral {
     @Override
     protected void setValue() {
         priceRelu = "span:matchesOwn(预算金额)";
-        detailRelu = "div[style='font-size: 12pt;']";
+        fullcontentRelu = "div[style='font-size: 12pt;']";
         cityIdRelu = 12;
     }
 
@@ -52,24 +52,23 @@ public class CCGP_LiaoNing extends WebGeneral {
                     String id = jo.getString("id");
                     String url = "http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getPubInfoViewOpenNew&infoId=" + id;
                     logger.info("url: " + url);
-                    resultData.setUrl(url);
+                    resultData.setArticleurl(url);
                     String md5 = Util.stringToMD5(url);
                     logger.info("md5: " + md5);
-                    resultData.setMd5(md5);
+                    //resultData.setMd5(md5);
                 } catch (Exception e) {
                     continue;
                 }
                 try {
                     String releaseDate = jo.getString("releaseDate");
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    Date addTime = format.parse(releaseDate);
+                    long addTime = format.parse(releaseDate).getTime();
                     logger.info("addTime: " + addTime);
-                    if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                    if (addTime - this.deadDate.getTime() < 0) {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }
-                    SimpleDateFormat tempFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    resultData.setAdd_time(tempFormat.format(addTime));
+                    resultData.setAdd_time(addTime);
                 } catch (Exception ignore) {
                 }
 
@@ -113,10 +112,10 @@ public class CCGP_LiaoNing extends WebGeneral {
         data.setPrice(price);
         String detail = getDetail(newHtmlParse);
         logger.info("detail: " + detail);
-        data.setDetail(detail);
+        data.setFullcontent(detail);
         String annex = getAnnex(newHtmlParse);
         logger.info("annex: " + annex);
-        data.setAnnex(annex);
+        data.setFjxxurl(annex);
     }
 
     @Override

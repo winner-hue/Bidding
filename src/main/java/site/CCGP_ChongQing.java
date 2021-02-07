@@ -27,13 +27,13 @@ public class CCGP_ChongQing extends WebGeneral {
         // 城市id规则
         cityIdRelu = 4;
         // 采购人规则
-        purchaserRelu = "p:matchesOwn(采购人：)";
+        authorRelu = "p:matchesOwn(采购人：)";
         // 价格规则
         priceRelu = "p:matchesOwn(成交金额：)";
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd HH:mm:ss";
         // 内容规则
-        detailRelu = "div.wrap-post h4,p";
+        fullcontentRelu = "div.wrap-post h4,p";
     }
 
     @Override
@@ -81,7 +81,7 @@ public class CCGP_ChongQing extends WebGeneral {
             } catch (Exception ignore) {
             }
             logger.info("purchaser: " + purchaser);
-            data.setPurchaser(purchaser);
+            data.setAuthor(purchaser);
             String price = null;
             try {
                 price = getPrice(Jsoup.parse(jo.getString("html")));
@@ -95,7 +95,7 @@ public class CCGP_ChongQing extends WebGeneral {
             } catch (Exception ignore) {
             }
             logger.info("detail: " + detail);
-            data.setDetail(detail);
+            data.setFullcontent(detail);
             List<String> fileList = new ArrayList<String>();
             try {
                 JSONArray attachments = jo.getJSONArray("attachments");
@@ -108,11 +108,11 @@ public class CCGP_ChongQing extends WebGeneral {
                 }
             } catch (Exception ignore) {
             }
-            logger.info("annex: " + fileList.toString());
+            logger.info("fjxxurl: " + fileList.toString());
             if (fileList.size() > 0) {
-                data.setAnnex(fileList.toString());
+                data.setFjxxurl(fileList.toString());
             } else {
-                data.setAnnex(null);
+                data.setFjxxurl(null);
             }
         } catch (Exception e) {
             logger.error("提取内容出错：" + e, e);
@@ -146,21 +146,19 @@ public class CCGP_ChongQing extends WebGeneral {
                     String id = jo.getString("id");
                     String url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/" + id;
                     logger.info("url: " + url);
-                    resultData.setUrl(url);
+                    resultData.setArticleurl(url);
                     // 获取链接md5值， 用于排重
                     String md5 = Util.stringToMD5(url);
                     logger.info("md5: " + md5);
-                    resultData.setMd5(md5);
+                    //resultData.setMd5(md5);
                 } catch (Exception ignore) {
                     continue;
                 }
                 // 获取发布时间
                 try {
-                    String issueTime = jo.getString("issueTime");
-                    SimpleDateFormat format = new SimpleDateFormat(this.addTimeParse);
-                    Date addTime = format.parse(issueTime);
-                    logger.info("addTime: " + addTime);
-                    if (addTime.getTime() - this.deadDate.getTime() < 0) {
+                    Long issueTime = jo.getLong("issueTime");
+                    logger.info("addTime: " + issueTime);
+                    if (issueTime - this.deadDate.getTime() < 0) {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }

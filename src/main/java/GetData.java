@@ -19,6 +19,6 @@ public class GetData {
 //        new CCGP_LiaoNing().start();
 //        new CCGP_HaiNan().start();
 //        new CCGP_NeiMengGu().start();
-        new CCGP_ShanXi().start();
+        new CCGP_HuNan().start();
     }
 }
