@@ -31,7 +31,7 @@ public class CCGP_ShangXi extends WebGeneral {
         // 列表url节点规则
         nodeListRelu = "table#node_list tbody tr";
         // 城市代码
-        cityIdRelu = 9;
+        cityIdRelu = 13;
     }
 
     @Override

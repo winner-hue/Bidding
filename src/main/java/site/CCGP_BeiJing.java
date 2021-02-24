@@ -19,7 +19,7 @@ public class CCGP_BeiJing extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div.div_hui";
         // 城市id规则
-        cityIdRelu = 1;
+        cityIdRelu = 4;
         // 采购人规则
         authorRelu = "";
         // 价格规则

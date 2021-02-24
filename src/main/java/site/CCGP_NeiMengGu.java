@@ -29,7 +29,7 @@ public class CCGP_NeiMengGu extends WebGeneral {
         // 列表url节点规则
         nodeListRelu = "div.index07_07_02 ul li";
         // 城市代码
-        cityIdRelu = 15;
+        cityIdRelu = 28;
 
         addTimeRelu = "span em";
     }

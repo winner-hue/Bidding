@@ -24,7 +24,7 @@ public class CCGP_HuNan extends WebGeneral {
         titleRelu = "p.danyi_title";
         priceRelu = "td:matchesOwn(预算金额：)";
         fullcontentRelu = "tbody tr";
-        cityIdRelu = 8;
+        cityIdRelu = 19;
     }
 
     @Override

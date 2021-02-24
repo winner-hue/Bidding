@@ -26,7 +26,7 @@ public class CCGP_HuBei extends WebGeneral {
         fullcontentRelu = "div[style='margin: 0 22px;']";
         fjxxurlRelu = "ul.list-unstyled.details-ul a";
         nodeListRelu = "ul.news-list-content.list-unstyled li";
-        cityIdRelu = 7;
+        cityIdRelu = 6;
         catIdRelu = "li.active";
     }
 

@@ -31,7 +31,7 @@ public class CCGP_HeNan extends WebGeneral {
         fullcontentRelu = "table.Content";
         fjxxurlRelu = "div.List1.Top5 a";
         nodeListRelu = "div.List2 li";
-        cityIdRelu = 6;
+        cityIdRelu = 25;
         catIdRelu = "a";
     }
 

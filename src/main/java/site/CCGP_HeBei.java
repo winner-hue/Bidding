@@ -39,7 +39,7 @@ public class CCGP_HeBei extends WebGeneral {
         // 列表url节点规则
         nodeListRelu = "table#moredingannctable td.txt1";
         // 城市代码
-        cityIdRelu = 5;
+        cityIdRelu = 8;
     }
 
     @Override

@@ -25,7 +25,7 @@ public class CCGP_ChongQing extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "h2#titlecandel";
         // 城市id规则
-        cityIdRelu = 4;
+        cityIdRelu = 21;
         // 采购人规则
         authorRelu = "p:matchesOwn(采购人：)";
         // 价格规则

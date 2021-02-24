@@ -23,7 +23,7 @@ public class CCGP_LiaoNing extends WebGeneral {
     protected void setValue() {
         priceRelu = "span:matchesOwn(预算金额)";
         fullcontentRelu = "div[style='font-size: 12pt;']";
-        cityIdRelu = 12;
+        cityIdRelu = 17;
     }
 
     @Override

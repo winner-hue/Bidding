@@ -25,7 +25,7 @@ public class CCGP_TianJin extends WebGeneral {
         // 描述规则
         descriptionRelu = "meta[name='ColumnDescription']";
 
-        cityIdRelu = 3;
+        cityIdRelu = 23;
         // 采集类型id规则
         catIdRelu = "div#crumbs";
         // 采购人规则
