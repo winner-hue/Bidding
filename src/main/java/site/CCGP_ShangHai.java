@@ -1,8 +1,11 @@
 package site;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import po.StructData;
@@ -12,6 +15,7 @@ import util.Util;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -38,6 +42,12 @@ public class CCGP_ShangHai extends WebGeneral{
 
     @Override
     protected void setValue() {
+        cityIdRelu = 5;
+        titleRelu = "body.view + header + h1";
+        descriptionRelu = titleRelu;
+        authorRelu = "span:matchesOwn(采购单位：)";
+        priceRelu = "";
+        fullcontentRelu = "tbody tr";
     }
 
     @Override
@@ -68,6 +78,10 @@ public class CCGP_ShangHai extends WebGeneral{
             String tempUrl = data.getArticleurl();
             String pageSource = getHttpBody(retryTime, tempUrl);
             Document parse = Jsoup.parse(pageSource);
+            Element iframe = parse.select("iframe").first();
+            String iframeSrc = iframe.attr("src");
+            System.out.println(iframeSrc);
+            parse = Jsoup.parse(parse.select("iframe").first().text());
             extract(parse, data, pageSource);
         }
         int count = 0;
@@ -117,7 +131,23 @@ public class CCGP_ShangHai extends WebGeneral{
 
     @Override
     protected String getDetail(Document parse) {
-        return super.getDetail(parse);
+        try {
+            String content = "";
+            try {
+                Elements elements = parse.select(fullcontentRelu);
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < elements.size(); i++) {
+                    if (i > 0) {
+                        builder.append(elements.get(i).text());
+                    }
+                }
+                content = builder.toString();
+            } catch (Exception ignore) {
+            }
+            return content;
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override
@@ -127,7 +157,11 @@ public class CCGP_ShangHai extends WebGeneral{
 
     @Override
     protected String getAuthor(Document parse) {
-        return super.getAuthor(parse);
+        try {
+            return parse.select(this.authorRelu).get(0).text().split("：")[1];
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override
@@ -141,22 +175,48 @@ public class CCGP_ShangHai extends WebGeneral{
     }
 
     @Override
-    protected String getTitle(Document parse) {
-        return super.getTitle(parse);
-    }
-
-    @Override
-    protected String getUrl(Element element) {
-        return super.getUrl(element);
-    }
-
-    @Override
-    protected Date getAddTime(Element element) {
-        return super.getAddTime(element);
-    }
-
-    @Override
     protected List<StructData> getAllResult(Document parse, String httpBody) {
-        return super.getAllResult(parse, httpBody);
+        List<StructData> allResults = new ArrayList<StructData>();
+        try {
+            JSONArray rows = JSONObject.parseObject(httpBody).getJSONObject("hits").getJSONArray("hits");
+            for (int i = 0; i < rows.size(); i++) {
+                logger.info("===========================================");
+                JSONObject jo = rows.getJSONObject(i);
+                StructData resultData = new StructData();
+                try {
+                    String source_url = jo.getJSONObject("_source").getString("url");
+                    String url = "http://www.zfcg.sh.gov.cn" + source_url;
+                    logger.info("url: " + url);
+                    resultData.setArticleurl(url);
+                } catch (Exception e) {
+                    continue;
+                }
+                try {
+                    long newworkDateAll = (Long) jo.getJSONArray("sort").get(0);
+                    logger.info("addTime: " + newworkDateAll);
+                    if (newworkDateAll - this.deadDate.getTime() < 0) {
+                        logger.info("发布时间早于截止时间， 不添加该任务url");
+                        continue;
+                    }
+                    resultData.setAdd_time(newworkDateAll);
+                } catch (Exception ignore) {
+                    logger.error(ignore.toString());
+                }
+                int catIdByText = -1;
+                try {
+                    String catId = jo.getJSONObject("_source").getString("pathName");
+                    catIdByText = getCatIdByText(catId);
+                    logger.info("catId: " + catIdByText);
+                } catch (Exception ignore) {
+                }
+                resultData.setCat_id(catIdByText);
+                logger.info("cityId: " + this.cityIdRelu);
+                resultData.setCity_id(this.cityIdRelu);
+                allResults.add(resultData);
+            }
+        } catch (Exception e) {
+            logger.error("获取json失败：" + e, e);
+        }
+        return allResults;
     }
 }
