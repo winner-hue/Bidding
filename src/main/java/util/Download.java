@@ -1,5 +1,6 @@
 package util;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -17,6 +18,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -33,14 +35,13 @@ import start.Bidding;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Download {
     private static Logger logger = LoggerFactory.getLogger(Download.class);
@@ -91,30 +92,54 @@ public class Download {
 
     public static String download(String url, String charSet) {
         if (url.contains("&#44")) {
-            return downPost(url, charSet);
+            if (url.contains("&application_jsons")) {
+                /*json数据*/
+                return downPost(url, charSet, 1);
+            }
+            return downPost(url, charSet, 2);
         } else {
             return downGet(url, charSet);
         }
     }
 
-    public static String downPost(String url, String charSet) {
+    public static String downPost(String url, String charSet, int content_type) {
+        if (content_type == 1) {
+            url = url.replaceAll("&application_jsons", "");
+        }
         String[] split = url.split("&#44");
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(split[0]);
         String[] params = split[1].split("&");
-        List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-        for (String param : params) {
-            String[] keyValue = param.split("=");
-            String key = keyValue[0];
-            String value = "";
-            try {
-                value = keyValue[1];
-            } catch (Exception ignore) {
-            }
-            postParams.add(new BasicNameValuePair(key, value));
-        }
         try {
-            httpPost.setEntity(new UrlEncodedFormEntity(postParams));
+            if (content_type == 1) {
+                Map<String,Object> map = new HashMap<String,Object>();
+                for (String param : params) {
+                    String[] keyValue = param.split("=");
+                    String key = keyValue[0];
+                    String value = "";
+                    try {
+                        value = keyValue[1];
+                    } catch (Exception ignore) {
+                    }
+                    map.put(key, value);
+                }
+                JSONObject json = new JSONObject(map);
+                httpPost.addHeader("Content-Type", "application/json");
+                httpPost.setEntity(new StringEntity(json.toJSONString(), Charset.forName("UTF-8")));
+            } else {
+                List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+                for (String param : params) {
+                    String[] keyValue = param.split("=");
+                    String key = keyValue[0];
+                    String value = "";
+                    try {
+                        value = keyValue[1];
+                    } catch (Exception ignore) {
+                    }
+                    postParams.add(new BasicNameValuePair(key, value));
+                }
+                httpPost.setEntity(new UrlEncodedFormEntity(postParams));
+            }
         } catch (Exception ignore) {
         }
         httpPost.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
