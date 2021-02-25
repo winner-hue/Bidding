@@ -48,20 +48,6 @@ public class CCGP_ShangHai extends WebGeneral{
     }
 
     @Override
-    protected void setValue() {
-        titleRelu = "body.view + header + h1";
-        descriptionRelu = titleRelu;
-        authorRelu = "span:matchesOwn(采购单位：)";
-        priceRelu = "";
-        fullcontentRelu = "tbody tr";
-    }
-
-    @Override
-    protected void main(String[] urls) {
-        super.main(urls);
-    }
-
-    @Override
     protected int getMaxPageSize(Document document) {
         return super.getMaxPageSize(document);
     }
@@ -131,10 +117,6 @@ public class CCGP_ShangHai extends WebGeneral{
         }
     }
 
-    protected int getCatId(Document parse) {
-        return super.getCatId(parse);
-    }
-
     protected void extractx(JSONObject parse_json, StructData data, String pageSource) {
         logger.info("==================================");
         Document doc = Jsoup.parse(parse_json.getString("content"));
@@ -184,31 +166,20 @@ public class CCGP_ShangHai extends WebGeneral{
     }
 
     protected String getPrice(JSONObject parse, Document doc) {
-        String price = null;
+        String price = null, max_price = "0", regex = "(\\d+\\.[0-0]{2})";
+        long num = 0;
         String page_str = parse.getString("content");
         try {
-            if (page_str.contains("采购预算金额：")) {
-                price = doc.select("span:containsOwn(采购预算金额：)").get(0).text();
-                price = price.substring(price.indexOf("金额：") + 3, price.indexOf("元"));
-            } else if (page_str.contains("预算金额（元）：")) {
-                Elements els = doc.select("span:containsOwn(预算金额（元）：)");
-                if (els.select("samp").size() <= 0) {
-                    price = els.next().text();
-                } else {
-                    price = els.select("samp").get(0).text();
-                }
-            } else if (page_str.contains("项目总金额：")) {
-                price = doc.select("span:containsOwn(项目总金额：)").get(0).text();
-                price = price.substring(price.indexOf("金额：") + 3, price.indexOf(")"));
-            } else if (page_str.contains("中标（成交金额）")) {
-                String regex = "(\\d+\\.\\d+)元";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher m = pattern.matcher(doc.html());
-                while(m.find()){
-                    return m.group(1);
+            Pattern pattern = Pattern.compile(regex);
+            Matcher m = pattern.matcher(page_str);
+            while(m.find()){
+                price = m.group(0);
+                num = Double.valueOf(price).intValue();
+                if (num > Double.valueOf(max_price).intValue()) {
+                    max_price = price;
                 }
             }
-            return price;
+            return max_price;
         } catch (Exception e) {
             logger.error(String.valueOf(e));
             return "";
@@ -221,15 +192,32 @@ public class CCGP_ShangHai extends WebGeneral{
         try {
             if (page_str.contains("采购单位：")) {
                 author = doc.select("span:containsOwn(采购单位：)").get(0).text().split("采购单位：")[1];
-            } else if (page_str.contains(" 采购人：")) {
-                author = doc.select("samp[class$=editDisable interval-text-box-cls readonly]").get(0).text();
-                if (author == null) {
+            } else if (page_str.contains("采购人：")) {
+                Elements els = doc.select("samp[class$=editDisable interval-text-box-cls readonly]");
+                if (els.size() > 0) {
+                    author = els.get(0).text();
+                } else if (doc.select("span:containsOwn(采购人：) ~ span").size() == 0) {
+                    author = doc.select("span:containsOwn(采购人：)").get(0).text().split("采购人：")[1];
+                } else {
                     author = doc.select("span:containsOwn(采购人：) ~ span").get(0).text();
                 }
             } else if (page_str.contains("采购人名称：")) {
                 author = doc.select("span:containsOwn(采购人名称：)").get(0).text().split("采购人名称：")[1];
-            } else if (page_str.contains("采购人信息")) {
-                author = doc.select("span:containsOwn(采购人信息)").get(0).parent().text();
+            }
+            else if (page_str.contains("采购人信息")) {
+                String regex = "editDisable interval-text-box-cls readonly\" style=\"font-family: inherit;\">(.*?)<";
+                try {
+                    Pattern pattern = Pattern.compile(regex);
+                    Matcher m = pattern.matcher(parse.getString("content"));
+                    while(m.find()){
+                        return m.group(1);
+                    }
+                    return "";
+                } catch (Exception e) {
+                    return "";
+                }
+            } else {
+                author = doc.select("span:containsOwn(采购人（甲方）)").get(0).children().get(0).text();
             }
             return author;
         } catch (Exception e) {
