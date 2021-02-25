@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import start.Bidding;
 import util.SqlPool;
 import util.Util;
 
+import javax.print.Doc;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -20,6 +22,11 @@ import java.util.Date;
 import java.util.List;
 
 import static util.Download.getHttpBody;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/*上海*/
 
 public class CCGP_ShangHai extends WebGeneral{
     private static Logger logger = LoggerFactory.getLogger(CCGP_ShangHai.class);
@@ -42,7 +49,6 @@ public class CCGP_ShangHai extends WebGeneral{
 
     @Override
     protected void setValue() {
-        cityIdRelu = 5;
         titleRelu = "body.view + header + h1";
         descriptionRelu = titleRelu;
         authorRelu = "span:matchesOwn(采购单位：)";
@@ -65,6 +71,10 @@ public class CCGP_ShangHai extends WebGeneral{
         return super.getNextPageUrl(document, currentPage, httpBody, url);
     }
 
+    protected String getTitle(JSONObject parse) {
+        return parse.getString("title");
+    }
+
     @Override
     protected void startRun(int retryTime, String url, int currentPage) {
         String httpBody = getHttpBody(retryTime, url);
@@ -78,11 +88,13 @@ public class CCGP_ShangHai extends WebGeneral{
             String tempUrl = data.getArticleurl();
             String pageSource = getHttpBody(retryTime, tempUrl);
             Document parse = Jsoup.parse(pageSource);
-            Element iframe = parse.select("iframe").first();
-            String iframeSrc = iframe.attr("src");
-            System.out.println(iframeSrc);
-            parse = Jsoup.parse(parse.select("iframe").first().text());
-            extract(parse, data, pageSource);
+            Element detail_ele = parse.select("input[name='articleDetail']").get(0);
+            String detail_str = detail_ele.attr("value");
+            JSONObject detail_json = JSONObject.parseObject(detail_str);
+            if (!detail_json.containsKey("title")) {
+                return;
+            }
+            extractx(detail_json, data, pageSource);
         }
         int count = 0;
         for (StructData resultData : allResult) {
@@ -119,59 +131,115 @@ public class CCGP_ShangHai extends WebGeneral{
         }
     }
 
-    @Override
-    protected void extract(Document parse, StructData data, String pageSource) {
-        super.extract(parse, data, pageSource);
-    }
-
-    @Override
-    protected String getAnnex(Document parse) {
-        return super.getAnnex(parse);
-    }
-
-    @Override
-    protected String getDetail(Document parse) {
-        try {
-            String content = "";
-            try {
-                Elements elements = parse.select(fullcontentRelu);
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < elements.size(); i++) {
-                    if (i > 0) {
-                        builder.append(elements.get(i).text());
-                    }
-                }
-                content = builder.toString();
-            } catch (Exception ignore) {
-            }
-            return content;
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    @Override
-    protected String getPrice(Document parse) {
-        return super.getPrice(parse);
-    }
-
-    @Override
-    protected String getAuthor(Document parse) {
-        try {
-            return parse.select(this.authorRelu).get(0).text().split("：")[1];
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    @Override
     protected int getCatId(Document parse) {
         return super.getCatId(parse);
     }
 
-    @Override
-    protected String getDescription(Document parse) {
-        return super.getDescription(parse);
+    protected void extractx(JSONObject parse_json, StructData data, String pageSource) {
+        logger.info("==================================");
+        Document doc = Jsoup.parse(parse_json.getString("content"));
+        String title = getTitle(parse_json);
+        logger.info("title: " + title);
+        data.setTitle(title);
+        String description = getDescription(parse_json);
+        logger.info("description: " + description);
+        data.setDescription(description);
+        int catId = getCatIdByText(pageSource);
+        logger.info("catId: " + catId);
+        data.setCat_id(catId);
+        int cityId = 5;
+        logger.info("cityId: " + cityId);
+        data.setCity_id(cityId);
+        String author = getAuthor(parse_json, doc);
+        logger.info("author: " + author);
+        data.setAuthor(author);
+        String price = getPrice(parse_json, doc);
+        logger.info("price: " + price);
+        data.setPrice(price);
+        String detail = getDetail(parse_json, doc);
+        logger.info("detail: " + detail);
+        data.setFullcontent(detail);
+        String annex = getAnnex(parse_json);
+        logger.info("annex: " + annex);
+        data.setFjxxurl(annex);
+    }
+
+    protected String getAnnex(JSONObject parse) {
+        String regex = "href=(.*?)>";
+        try {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher m = pattern.matcher(parse.getString("content"));
+            while(m.find()){
+                return m.group(1);
+            }
+            return "";
+        } catch (Exception e) {
+            logger.error(String.valueOf(e));
+            return "";
+        }
+    }
+
+    protected String getDetail(JSONObject parse, Document doc) {
+        return doc.text();
+    }
+
+    protected String getPrice(JSONObject parse, Document doc) {
+        String price = null;
+        String page_str = parse.getString("content");
+        try {
+            if (page_str.contains("采购预算金额：")) {
+                price = doc.select("span:containsOwn(采购预算金额：)").get(0).text();
+                price = price.substring(price.indexOf("金额：") + 3, price.indexOf("元"));
+            } else if (page_str.contains("预算金额（元）：")) {
+                Elements els = doc.select("span:containsOwn(预算金额（元）：)");
+                if (els.select("samp").size() <= 0) {
+                    price = els.next().text();
+                } else {
+                    price = els.select("samp").get(0).text();
+                }
+            } else if (page_str.contains("项目总金额：")) {
+                price = doc.select("span:containsOwn(项目总金额：)").get(0).text();
+                price = price.substring(price.indexOf("金额：") + 3, price.indexOf(")"));
+            } else if (page_str.contains("中标（成交金额）")) {
+                String regex = "(\\d+\\.\\d+)元";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher m = pattern.matcher(doc.html());
+                while(m.find()){
+                    return m.group(1);
+                }
+            }
+            return price;
+        } catch (Exception e) {
+            logger.error(String.valueOf(e));
+            return "";
+        }
+    }
+
+    protected String getAuthor(JSONObject parse, Document doc) {
+        String author = null;
+        String page_str = parse.getString("content");
+        try {
+            if (page_str.contains("采购单位：")) {
+                author = doc.select("span:containsOwn(采购单位：)").get(0).text().split("采购单位：")[1];
+            } else if (page_str.contains(" 采购人：")) {
+                author = doc.select("samp[class$=editDisable interval-text-box-cls readonly]").get(0).text();
+                if (author == null) {
+                    author = doc.select("span:containsOwn(采购人：) ~ span").get(0).text();
+                }
+            } else if (page_str.contains("采购人名称：")) {
+                author = doc.select("span:containsOwn(采购人名称：)").get(0).text().split("采购人名称：")[1];
+            } else if (page_str.contains("采购人信息")) {
+                author = doc.select("span:containsOwn(采购人信息)").get(0).parent().text();
+            }
+            return author;
+        } catch (Exception e) {
+            logger.error(String.valueOf(e));
+            return "";
+        }
+    }
+
+    protected String getDescription(JSONObject parse) {
+        return parse.getString("title");
     }
 
     @Override
