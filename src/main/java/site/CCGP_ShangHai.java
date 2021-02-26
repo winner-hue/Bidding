@@ -47,14 +47,21 @@ public class CCGP_ShangHai extends WebGeneral{
         Bidding.cout.decrementAndGet();
     }
 
-    @Override
-    protected int getMaxPageSize(Document document) {
-        return super.getMaxPageSize(document);
+    protected int getMaxPageSize() {
+        return this.maxPageSize;
     }
 
-    @Override
-    protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
-        return super.getNextPageUrl(document, currentPage, httpBody, url);
+    protected String getNextPageUrl(int currentPage, String url) {
+        String nextPageUrl = null;
+        if (this.maxPageSize == 1) {
+            this.maxPageSize = getMaxPageSize();
+            logger.info("maxPageSize: " + this.maxPageSize);
+        }
+        if (((currentPage == maxPageSize) && (maxPageSize != 0)) || currentPage < this.maxPageSize) {
+            nextPageUrl = url.replaceAll("pageNo=(\\d+)", "pageNo=" + (currentPage + 1));
+            logger.info("nextPageUrl: " + nextPageUrl);
+        }
+        return nextPageUrl;
     }
 
     protected String getTitle(JSONObject parse) {
@@ -68,6 +75,8 @@ public class CCGP_ShangHai extends WebGeneral{
             logger.error("下载失败， 直接返回为空");
             return;
         }
+        String total = Util.match("total\":(\\d+),\"max", httpBody)[1];
+        this.maxPageSize = (int) Math.ceil(Double.parseDouble(total) / 50);
         Document document = Jsoup.parse(httpBody);
         List<StructData> allResult = getAllResult(document, httpBody);
         for (StructData data : allResult) {
@@ -104,10 +113,10 @@ public class CCGP_ShangHai extends WebGeneral{
         if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
             try {
                 try {
-                    currentPage = Integer.parseInt(Util.match("index_(\\d+)", url)[1]);
+                    currentPage = Integer.parseInt(Util.match("pageNo=(\\d+)&", url)[1]);
                 } catch (Exception ignore) {
                 }
-                String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
+                String nextPageUrl = getNextPageUrl(currentPage, url);
                 if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
                     startRun(retryTime, nextPageUrl, (currentPage + 1));
                 }
@@ -141,24 +150,9 @@ public class CCGP_ShangHai extends WebGeneral{
         String detail = getDetail(parse_json, doc);
         logger.info("detail: " + detail);
         data.setFullcontent(detail);
-        String annex = getAnnex(parse_json);
+        String annex = getAnnex(doc);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
-    }
-
-    protected String getAnnex(JSONObject parse) {
-        String regex = "href=(.*?)>";
-        try {
-            Pattern pattern = Pattern.compile(regex);
-            Matcher m = pattern.matcher(parse.getString("content"));
-            while(m.find()){
-                return m.group(1);
-            }
-            return "";
-        } catch (Exception e) {
-            logger.error(String.valueOf(e));
-            return "";
-        }
     }
 
     protected String getDetail(JSONObject parse, Document doc) {

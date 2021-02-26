@@ -76,7 +76,7 @@ public class Util {
         //insert into table_name (column_name1,column_name2, ...) values (value1,value2, ...)
         String sql = "";
         Field[] fields = ReflectUtil.getFieldsDirectly(clazz, false);
-        StringBuffer topHalf = new StringBuffer("insert into " + tablename + " (");
+        StringBuffer topHalf = new StringBuffer("insert ignore into " + tablename + " (");
         StringBuffer afterAalf = new StringBuffer("values (");
         for (Field field : fields) {
             topHalf.append(field.getName() + ",");
