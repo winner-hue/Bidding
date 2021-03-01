@@ -20,6 +20,6 @@ public class GetData {
 //        new CCGP_HaiNan().start();
 //        new CCGP_NeiMengGu().start();
 //        new CCGP_HuNan().start();
-//        new CCGP_ShangHai().start();
+        new CCGP_ShangHai().start();
     }
 }
