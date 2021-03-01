@@ -19,6 +19,8 @@ public class StructData {
     private String price;
     // 发布时间
     private long add_time;
+    // 发布时间格式化
+    private String add_time_name;
     // 内容 采集全部内容
     private String fullcontent;
     // 附件
@@ -94,6 +96,14 @@ public class StructData {
 
     public void setAdd_time(long add_time) {
         this.add_time = add_time / 1000;
+    }
+
+    public void setAdd_time_name(String add_time_name) {
+        this.add_time_name = add_time_name;
+    }
+
+    public String getAdd_time_name() {
+        return add_time_name;
     }
 
     public String getFullcontent() {

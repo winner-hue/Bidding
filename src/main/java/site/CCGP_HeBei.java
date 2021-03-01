@@ -76,7 +76,10 @@ public class CCGP_HeBei extends WebGeneral {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
                 resultData.setCity_id(this.cityIdRelu);
 
                 String purchaser = getAuthor(parse);
@@ -114,6 +117,8 @@ public class CCGP_HeBei extends WebGeneral {
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
+        String add_time_name = data.getAdd_time_name();
+        data.setAdd_time_name(add_time_name);
     }
 
     @Override

@@ -149,7 +149,10 @@ public class CCGP_HeNan extends WebGeneral {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
                 resultData.setCity_id(this.cityIdRelu);
                 allResults.add(resultData);
             } catch (Exception e) {
@@ -179,6 +182,7 @@ public class CCGP_HeNan extends WebGeneral {
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
         data.setFullcontent(detail);
-
+        String add_time_name = data.getAdd_time_name();
+        data.setAdd_time_name(add_time_name);
     }
 }

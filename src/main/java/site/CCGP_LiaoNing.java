@@ -68,7 +68,10 @@ public class CCGP_LiaoNing extends WebGeneral {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }
+                    SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    String add_time_name = formats.format(addTime);
                     resultData.setAdd_time(addTime);
+                    resultData.setAdd_time_name(add_time_name);
                 } catch (Exception ignore) {
                 }
 
@@ -116,6 +119,8 @@ public class CCGP_LiaoNing extends WebGeneral {
         String annex = getAnnex(newHtmlParse);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
+        String add_time_name = data.getAdd_time_name();
+        data.setAdd_time_name(add_time_name);
     }
 
     @Override

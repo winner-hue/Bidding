@@ -114,6 +114,8 @@ public class CCGP_ChongQing extends WebGeneral {
             } else {
                 data.setFjxxurl(null);
             }
+            String add_time_name = data.getAdd_time_name();
+            data.setAdd_time_name(add_time_name);
         } catch (Exception e) {
             logger.error("提取内容出错：" + e, e);
         }
@@ -162,7 +164,10 @@ public class CCGP_ChongQing extends WebGeneral {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
                         continue;
                     }
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    String add_time_name = format.format(issueTime);
                     resultData.setAdd_time(issueTime);
+                    resultData.setAdd_time_name(add_time_name);
                 } catch (Exception e) {
                     logger.error("获取时间错误：" + e, e);
                     continue;

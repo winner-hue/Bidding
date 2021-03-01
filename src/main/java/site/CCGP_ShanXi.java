@@ -66,9 +66,11 @@ public class CCGP_ShanXi extends WebGeneral {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
                     continue;
                 }
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
                 resultData.setCity_id(this.cityIdRelu);
-
                 if (baseUrl.contains("noticetype=3")) {
                     logger.info("catId: " + 1);
                     resultData.setCat_id(1);
@@ -133,6 +135,8 @@ public class CCGP_ShanXi extends WebGeneral {
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
+        String add_time_name = data.getAdd_time_name();
+        data.setAdd_time_name(add_time_name);
     }
 
     @Override
