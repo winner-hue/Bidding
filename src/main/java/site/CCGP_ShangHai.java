@@ -41,7 +41,7 @@ public class CCGP_ShangHai extends WebGeneral{
         String startDate = format.format(new Date(System.currentTimeMillis() - 3 * 30 * 24 * 60 * 60 * 1000L));
         for (int i = 0; i < length_num; i++) {
             String code = "ZcyAnnouncement".concat(String.valueOf(i + 1));
-            urls[i] = url_start.concat("&application_jsons&#44utm=sites_group_front.2ef5001f.0.0.f5992140395c11eb9a363987d6b81c96&categoryCode=".concat(code).concat("&pageSize=50&pageNo=1&publishDateBegin=".concat(startDate).concat("&application_jsons")));
+            urls[i] = url_start.concat("&#44utm=sites_group_front.2ef5001f.0.0.f5992140395c11eb9a363987d6b81c96&categoryCode=".concat(code).concat("&pageSize=50&pageNo=1&publishDateBegin=".concat(startDate).concat("&application_jsons")));
         }
         this.main(urls);
         Bidding.cout.decrementAndGet();
