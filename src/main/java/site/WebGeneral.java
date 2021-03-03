@@ -230,7 +230,7 @@ public class WebGeneral extends Thread {
             Elements pdfs = parse.select("a");
             for (Element pdf : pdfs) {
                 String href = pdf.attr("href");
-                if (href.contains(".pdf") || href.contains(".doc") || href.contains(".xlsx") || href.contains(".xls")) {
+                if (href.contains(".pdf") || href.contains(".doc") || href.contains(".xlsx") || href.contains(".xls") || href.contains(".zip")) {
                     if (href.startsWith("http")) {
                         pdfList.add(href);
                     }
