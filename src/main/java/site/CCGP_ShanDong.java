@@ -1,7 +1,6 @@
 package site;
 
 import com.alibaba.fastjson.JSONObject;
-import com.sun.tools.corba.se.idl.StringGen;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
