@@ -248,7 +248,7 @@ public class CCGP_ShangHai extends WebGeneral{
                     logger.info("addTime: " + newworkDateAll);
                     if (newworkDateAll - this.deadDate.getTime() < 0) {
                         logger.info("发布时间早于截止时间， 不添加该任务url");
-                        continue;
+                        break;
                     }
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                     String add_time_name = format.format(newworkDateAll);
