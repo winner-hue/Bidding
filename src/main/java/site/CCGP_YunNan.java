@@ -20,22 +20,27 @@ import java.util.*;
 
 import static util.Download.getHttpBody;
 
-public class CCGP_YunNan extends WebGeneral{
+public class CCGP_YunNan extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_YunNan.class);
     private static HashMap<String, String> heads = new HashMap<String, String>();
-    private static String relu = "{'1': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td', 'priceRelu': 'div.table table tbody tr td:containsOwn(预算金额) + td',\n" +
+    private static String relu = "{'1': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td',\n" +
+            "            'priceRelu': 'div.table table tbody tr td:containsOwn(预算金额) + td',\n" +
             "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '4': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td', 'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td',\n" +
+            "      '4': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td',\n" +
+            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td',\n" +
             "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
             "      '3': {'authorRelu': 'label:containsOwn(预算单位：) + div', 'priceRelu': 'label:containsOwn(预算金额：) + div',\n" +
             "            'fullcontentRelu': 'div.panel-body'},\n" +
             "      '5': {'authorRelu': 'label:containsOwn(预算单位：) + div', 'priceRelu': 'label:containsOwn(预算金额：) + div',\n" +
             "            'fullcontentRelu': 'div.panel-body form-horizontal'},\n" +
-            "      '2': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td', 'priceRelu': 'div.table table tbody tr td:containsOwn(总成交金额) + td',\n" +
+            "      '2': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td',\n" +
+            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总成交金额) + td',\n" +
             "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
             "      '7': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td', 'priceRelu': '',\n" +
             "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '6': {'authorRelu': 'span:containsOwn(采购人（甲方）)', 'priceRelu': 'span:containsOwn(合同金额)'}\n" +
+            "      '6': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td',\n" +
+            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td',\n" +
+            "            'fullcontentRelu': 'div.divcss5'}\n" +
             "      }";
     public static JSONObject relus = JSONObject.parseObject(relu);
 
@@ -101,10 +106,15 @@ public class CCGP_YunNan extends WebGeneral{
             return;
         }
         String query_sign = Util.match("query_sign=(\\d+)", url)[1];
-        List<StructData> allResult = getAllResult(httpBody);
+        List<StructData> allResult = getAllResult(httpBody, retryTime);
         for (StructData data : allResult) {
             String tempUrl = data.getArticleurl();
-            String pageSource = getHttpBody(retryTime, tempUrl, heads);
+            String pageSource = "";
+            try {
+                pageSource = getHttpBody(retryTime, tempUrl, heads);
+            } catch (Exception e) {
+                logger.error(e.toString());
+            }
             Document parse = Jsoup.parse(pageSource);
             extract(parse, data, query_sign);
         }
@@ -127,19 +137,17 @@ public class CCGP_YunNan extends WebGeneral{
         }
         logger.info("插入成功：" + count + " 条");
         //添加下一页
-        if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
+        try {
             try {
-                try {
-                    currentPage = Integer.parseInt(Util.match("current=(\\d+)&", url)[1]);
-                } catch (Exception ignore) {
-                }
-                String nextPageUrl = getNextPageUrl(currentPage, url);
-                if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
-                    startRun(retryTime, nextPageUrl, (currentPage + 1));
-                }
-            } catch (Exception e) {
-                logger.error("下一页提取错误：" + e, e);
+                currentPage = Integer.parseInt(Util.match("current=(\\d+)&", url)[1]);
+            } catch (Exception ignore) {
             }
+            String nextPageUrl = getNextPageUrl(currentPage, url);
+            if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
+                startRun(retryTime, nextPageUrl, (currentPage + 1));
+            }
+        } catch (Exception e) {
+            logger.error("下一页提取错误：" + e, e);
         }
     }
 
@@ -161,21 +169,29 @@ public class CCGP_YunNan extends WebGeneral{
         String detail = getDetail(parse, query_sign);
         logger.info("detail: " + detail);
         data.setFullcontent(detail);
-        String annex = getAnnex(parse, query_sign);
+        String annex = getAnnex(parse);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
     }
 
-    protected String getAnnex(Document parse, String query_sign) {
-        return super.getAnnex(parse);
+    @Override
+    protected String getAnnex(Document parse) {
+        return null;
     }
 
     protected String getDetail(Document parse, String query_sign) {
         String detail_str = null;
         try {
-            detail_str = parse.select(relus.getJSONObject(query_sign).get("fullcontentRelu").toString()).html();
+            detail_str = parse.select(relus.getJSONObject(query_sign).getString("fullcontentRelu")).html();
         } catch (Exception e) {
-            return "";
+            try {
+                detail_str = parse.select("form#institutionForm").html();
+            } catch (Exception exception) {
+                return "";
+            }
+        }
+        if (detail_str.length() < 10) {
+            detail_str = parse.select("div#searchPanel").html();
         }
         return detail_str;
     }
@@ -183,9 +199,13 @@ public class CCGP_YunNan extends WebGeneral{
     protected String getPrice(Document parse, String query_sign) {
         String price_str = null;
         try {
-            price_str = parse.select(relus.getJSONObject(query_sign).get("priceRelu").toString()).get(0).text();
+            price_str = parse.select(relus.getJSONObject(query_sign).getString("priceRelu")).get(0).text();
         } catch (Exception e) {
-            return "";
+            try {
+                price_str = parse.select("label:containsOwn(合同金额：) + div span").get(0).text();
+            } catch (Exception exception) {
+                return "";
+            }
         }
         return price_str;
     }
@@ -193,16 +213,15 @@ public class CCGP_YunNan extends WebGeneral{
     protected String getAuthor(Document parse, String query_sign) {
         String author = null;
         try {
-            author = parse.select(relus.getJSONObject(query_sign).get("authorRelu").toString()).get(0).text();
+            author = parse.select(relus.getJSONObject(query_sign).getString("authorRelu")).get(0).text();
         } catch (Exception e) {
-            return "";
+            try {
+                author = parse.select("label:containsOwn(采购人（甲方）：) + div span").get(0).text();
+            } catch (Exception exception) {
+                return "";
+            }
         }
         return author;
-    }
-
-    @Override
-    protected int getCatId(Document parse) {
-        return super.getCatId(parse);
     }
 
     @Override
@@ -210,22 +229,7 @@ public class CCGP_YunNan extends WebGeneral{
         return super.getDescription(parse);
     }
 
-    @Override
-    protected String getTitle(Document parse) {
-        return super.getTitle(parse);
-    }
-
-    @Override
-    protected String getUrl(Element element) {
-        return super.getUrl(element);
-    }
-
-    @Override
-    protected Date getAddTime(Element element) {
-        return super.getAddTime(element);
-    }
-
-    protected List<StructData> getAllResult(String httpBody) {
+    protected List<StructData> getAllResult(String httpBody, int retryTime) {
         List<StructData> allResults = new ArrayList<StructData>();
         try {
             JSONArray rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
@@ -233,11 +237,23 @@ public class CCGP_YunNan extends WebGeneral{
                 logger.info("===========================================");
                 JSONObject jo = rows.getJSONObject(i);
                 StructData resultData = new StructData();
-                if (jo.get("finishday").toString().length() < 1) {
+                if (jo.getString("finishday").length() < 1 || jo.getString("bulletin_id").length() <= 4 || jo.getString("bulletin_id").equals("sjdwcghtgg")) {
                     continue;
                 }
                 try {
                     String url = showUrl(jo.getString("bulletin_id"), jo.getString("bulletinclass"), jo.getString("tabletype"));
+                    if (jo.getString("tabletype").equals("6")) {
+                        try {
+                            String pageSource = getHttpBody(retryTime, url, heads);
+                            Document parse = Jsoup.parse(pageSource);
+                            String urlx = parse.select("input#placardurl").get(0).attr("value");
+                            if (urlx.startsWith("http")) {
+                                url = urlx;
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
                 } catch (Exception e) {
