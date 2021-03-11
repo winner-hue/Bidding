@@ -75,6 +75,7 @@ public class CCGP_JiangXi extends WebGeneral {
             try {
                 format = new SimpleDateFormat("yyyy-MM-dd");
                 this.deadDate = format.parse(Util.getLastMonth(null, 3));
+//                this.deadDate = format.parse("2021-03-11");
             } catch (ParseException e) {
                 e.printStackTrace();
             }
