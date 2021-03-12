@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import po.StructData;
@@ -14,41 +15,33 @@ import util.Util;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static util.Download.getHttpBody;
 
 public class CCGP_GuiZhou extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_GuiZhou.class);
-    private static HashMap<String, String> heads = new HashMap<String, String>();
     private static String relu = "{'cgxqgs': {'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
-            "                 'priceRelu': 'span:containsOwn(预算金额:) + span'},\n" +
+            "                 'priceRelu': 'span:containsOwn(采购预算：) + span'},\n" +
             "      'cggg': {\n" +
             "          'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
             "          'priceRelu': 'span:containsOwn(预算金额:) + span'},\n" +
-            "      'gzgg': {'authorRelu': 'label:containsOwn(预算单位：) + div|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "               'priceRelu': 'label:containsOwn(预算金额：) + div|label:containsOwn(合同金额：) + div span',\n" +
-            "               'fullcontentRelu': 'div.panel-body'},\n" +
-            "      'fbgg': {'authorRelu': 'label:containsOwn(预算单位：) + div|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "               'priceRelu': 'label:containsOwn(预算金额：) + div|label:containsOwn(合同金额：) + div span',\n" +
-            "               'fullcontentRelu': 'div.panel-body form-horizontal'},\n" +
+            "      'gzgg': {'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
+            "               'priceRelu': ''},\n" +
+            "      'fbgg': {'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
+            "               'priceRelu': ''},\n" +
             "      'zbcggg': {\n" +
             "          'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
-            "          'priceRelu': 'tbody tr:eq(1) td:eq(4)'},\n" +
+            "          'priceRelu': 'tbody tr:eq(1) td:eq(4)|tbody tr.bidm td:eq(4)'},\n" +
             "      'dylygs': {\n" +
-            "          'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "          'priceRelu': 'label:containsOwn(合同金额：) + div span',\n" +
-            "          'fullcontentRelu': 'div.vF_detail_content'},\n" +
+            "          'authorRelu': 'span:containsOwn(采购人:) + span',\n" +
+            "          'priceRelu': 'span:containsOwn(预审金额:) + span'},\n" +
             "      'dylycggg': {\n" +
-            "          'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span|p:containsOwn(采购单位名称:) + span',\n" +
-            "          'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td|label:containsOwn(合同金额：) + div span|div.table table tbody tr td:containsOwn(总成交金额) + td|p:containsOwn(采购计划金额（元）:) + span',\n" +
-            "          'fullcontentRelu': 'div.divcss5|form#institutionForm5|div#searchPanel'},\n" +
+            "          'authorRelu': 'li:has(span:containsOwn(1、采购人信息)) + li span:eq(1)',\n" +
+            "          'priceRelu': 'span:containsOwn(预算金额:) + span'},\n" +
             "      'zgys_1': {\n" +
-            "          'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span|p:containsOwn(采购单位名称:) + span',\n" +
-            "          'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td|label:containsOwn(合同金额：) + div span|div.table table tbody tr td:containsOwn(总成交金额) + td|p:containsOwn(采购计划金额（元）:) + span',\n" +
-            "          'fullcontentRelu': 'div.divcss5|form#institutionForm5|div#searchPanel'}\n" +
+            "          'authorRelu': 'li:has(span:containsOwn(采购人名称:))',\n" +
+            "          'priceRelu': 'li:has(span:containsOwn(采购预算:))'}\n" +
             "      }";
     public static JSONObject relus = JSONObject.parseObject(relu);
 
@@ -65,7 +58,7 @@ public class CCGP_GuiZhou extends WebGeneral {
         cityIdRelu = 24;
         nodeListRelu = "div.xnrx ul li";
         titleRelu = "h3";
-        fullcontentRelu = "div.xnrx";
+        fullcontentRelu = "div[style=xnrx]";
     }
 
     @Override
@@ -94,19 +87,19 @@ public class CCGP_GuiZhou extends WebGeneral {
         }
         for (String url : urls) {
             logger.info("当前开始url： " + url);
-            this.baseUrl = url;
+            this.baseUrl = url.split("index")[0];
             startRun(retryTime, url, 0);
         }
     }
 
-    @Override
-    protected int getMaxPageSize(Document document) {
-        return super.getMaxPageSize(document);
-    }
-
-    @Override
-    protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
-        return super.getNextPageUrl(document, currentPage, httpBody, url);
+    protected String getNextPageUrl(int currentPage, String url) {
+        String next_url = null;
+        if (url.contains("index_")) {
+            next_url = url.replaceAll("index_(\\d+)", "index_" + (currentPage + 1));
+        } else {
+            next_url = url.replaceAll("index", "index_" + (currentPage + 1));
+        }
+        return next_url;
     }
 
     @Override
@@ -118,9 +111,16 @@ public class CCGP_GuiZhou extends WebGeneral {
         }
         Document document = Jsoup.parse(httpBody);
         List<StructData> allResult = getAllResult(document, httpBody);
-        for (StructData data : allResult) {
+        Iterator<StructData> it = allResult.iterator();
+        while (it.hasNext()) {
+            StructData data = it.next();
             String tempUrl = data.getArticleurl();
             String pageSource = getHttpBody(retryTime, tempUrl);
+            if (pageSource == null || pageSource.length() < 1 || pageSource.contains("404 Not Found")) {
+                logger.error("下载失败， 直接返回为空");
+                it.remove();
+                continue;
+            }
             Document parse = Jsoup.parse(pageSource);
             extract(parse, data, pageSource);
         }
@@ -149,7 +149,7 @@ public class CCGP_GuiZhou extends WebGeneral {
                     currentPage = Integer.parseInt(Util.match("index_(\\d+)", url)[1]);
                 } catch (Exception ignore) {
                 }
-                String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
+                String nextPageUrl = getNextPageUrl(currentPage, url);
                 if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
                     startRun(retryTime, nextPageUrl, (currentPage + 1));
                 }
@@ -161,7 +161,23 @@ public class CCGP_GuiZhou extends WebGeneral {
 
     @Override
     protected void extract(Document parse, StructData data, String pageSource) {
-        super.extract(parse, data, pageSource);
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMM");
+        String url = data.getArticleurl(), end_str = format.format(data.getAdd_time() * 1000);
+        String colcode = url.substring(url.indexOf("sjbx/") + 5, url.indexOf(end_str) - 1);
+        int cityId = cityIdRelu;
+        logger.info("cityId: " + cityId);
+        String author = getAuthor(parse, colcode);
+        logger.info("author: " + author);
+        data.setAuthor(author);
+        String price = getPrice(parse, colcode);
+        logger.info("price: " + price);
+        data.setPrice(price);
+        String detail = getDetail(parse, colcode);
+        logger.info("detail: " + detail);
+        data.setFullcontent(detail);
+        String annex = getAnnex(parse);
+        logger.info("annex: " + annex);
+        data.setFjxxurl(annex);
     }
 
     @Override
@@ -169,48 +185,97 @@ public class CCGP_GuiZhou extends WebGeneral {
         return super.getAnnex(parse);
     }
 
-    @Override
-    protected String getDetail(Document parse) {
-        return super.getDetail(parse);
+    protected String getDetail(Document parse, String query_sign) {
+        String detail_str = "";
+        try {
+            detail_str = parse.select(fullcontentRelu).html();
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return detail_str;
     }
 
-    @Override
-    protected String getPrice(Document parse) {
-        return super.getPrice(parse);
+    protected String getPrice(Document parse, String query_sign) {
+        String price_str = "";
+        String[] priceRelus = relus.getJSONObject(query_sign).getString("priceRelu").split("\\|");
+        try {
+            for (String priceRelu : priceRelus) {
+                try {
+                    price_str = parse.select(priceRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (price_str.length() > 0) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return price_str;
     }
 
-    @Override
-    protected String getAuthor(Document parse) {
-        return super.getAuthor(parse);
-    }
-
-    @Override
-    protected int getCatId(Document parse) {
-        return super.getCatId(parse);
-    }
-
-    @Override
-    protected String getDescription(Document parse) {
-        return super.getDescription(parse);
-    }
-
-    @Override
-    protected String getTitle(Document parse) {
-        return super.getTitle(parse);
-    }
-
-    @Override
-    protected String getUrl(Element element) {
-        return super.getUrl(element);
-    }
-
-    @Override
-    protected Date getAddTime(Element element) {
-        return super.getAddTime(element);
+    protected String getAuthor(Document parse, String query_sign) {
+        String author = "";
+        String[] authorRelus = relus.getJSONObject(query_sign).getString("authorRelu").split("\\|");
+        try {
+            for (String authorRelu : authorRelus) {
+                try {
+                    author = parse.select(authorRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (author.length() > 0) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return author;
     }
 
     @Override
     protected List<StructData> getAllResult(Document parse, String httpBody) {
-        return super.getAllResult(parse, httpBody);
+        List<StructData> allResults = new ArrayList<StructData>();
+        Elements cListBid = parse.select(this.nodeListRelu);
+        for (Element element : cListBid) {
+            logger.info("===========================================");
+            StructData resultData = new StructData();
+            try {
+                // 获取链接
+                String url = getUrl(element);
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
+                String hits = element.select("span").get(0).text();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = format.parse(hits);
+                long addTime = date.getTime();
+                logger.info("addTime: " + addTime);
+                if (addTime - this.deadDate.getTime() < 0) {
+                    logger.info("发布时间早于截止时间， 不添加该任务url");
+                    break;
+                }
+                String title = element.select("a").get(0).text();
+                resultData.setTitle(title);
+                resultData.setDescription(title);
+                format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
+                resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
+                resultData.setCity_id(this.cityIdRelu);
+                int catIdByText = -1;
+                try {
+                    catIdByText = getCatIdByText(title);
+                    logger.info("catId: " + catIdByText);
+                } catch (Exception ignore) {
+                }
+                resultData.setCat_id(catIdByText);
+                allResults.add(resultData);
+            } catch (Exception e) {
+                logger.error("提取链接错误：" + e, e);
+            }
+        }
+        return allResults;
     }
 }

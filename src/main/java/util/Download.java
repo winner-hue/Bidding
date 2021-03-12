@@ -81,8 +81,12 @@ public class Download {
                 }
             } catch (Exception ignore) {
             }
-            if (httpBody == null) {
+            if (httpBody == null || httpBody.contains("404 Not Found")) {
                 logger.info("当前重试下载次数为：" + i + " " + url);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                }
                 continue;
             }
             break;
@@ -101,8 +105,12 @@ public class Download {
                 }
             } catch (Exception ignore) {
             }
-            if (httpBody == null) {
+            if (httpBody == null || httpBody.contains("404 Not Found")) {
                 logger.info("当前重试下载次数为：" + i + " " + url);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                }
                 continue;
             }
             break;

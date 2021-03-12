@@ -24,5 +24,6 @@ public class GetData {
 //        new CCGP_ShanDong().start();
 //        new CCGP_JiangXi().start();
 //        new CCGP_YunNan().start();
+        new CCGP_GuiZhou().start();
     }
 }
