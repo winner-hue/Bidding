@@ -22,7 +22,7 @@ import java.util.List;
 import static util.Download.getHttpBody;
 
 public class CCGP_DaLian extends WebGeneral {
-    private static Logger logger = LoggerFactory.getLogger(CCGP_GuiZhou.class);
+    private static Logger logger = LoggerFactory.getLogger(CCGP_DaLian.class);
     private static String relu = "{'003001001': {'authorRelu': 'tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1) p span:eq(1)|tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1)',\n" +
             "                    'priceRelu': 'span:containsOwn(预算金额：) + span',\n" +
             "                    'price_unit': '万元'},\n" +
@@ -35,7 +35,7 @@ public class CCGP_DaLian extends WebGeneral {
             "      '003006001': {'authorRelu': 'span:containsOwn(规定，现将) + span',\n" +
             "                    'priceRelu': 'table#_Sheet1_7_0 tbody tr:eq(2) td:eq(3)',\n" +
             "                    'price_unit': '万元'},\n" +
-            "      '003001002': {'authorRelu': 'tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1) p span:eq(1)',\n" +
+            "      '003001002': {'authorRelu': 'tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1) p span:eq(1)|tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1)',\n" +
             "                    'priceRelu': 'span:containsOwn(预算金额：) + span',\n" +
             "                    'price_unit': '万元'},\n" +
             "      '003002002': {'authorRelu': 'tr:has(td:containsOwn(1.采购人信息)) + tr td:eq(1) p span:eq(1)',\n" +
@@ -102,7 +102,7 @@ public class CCGP_DaLian extends WebGeneral {
 
     @Override
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
-        return super.getNextPageUrl(document, currentPage, httpBody, url);
+        return url.replaceAll("__EVENTARGUMENT=(\\d+)", "__EVENTARGUMENT=" + (currentPage + 1));
     }
 
     @Override
@@ -116,9 +116,14 @@ public class CCGP_DaLian extends WebGeneral {
         List<StructData> allResult = getAllResult(document, httpBody);
         for (StructData data : allResult) {
             String tempUrl = data.getArticleurl();
-            String pageSource = getHttpBody(retryTime, tempUrl);
-            Document parse = Jsoup.parse(pageSource);
-            extract(parse, data, pageSource);
+            String pageSource = null;
+            try {
+                pageSource = getHttpBody(retryTime, tempUrl);
+                Document parse = Jsoup.parse(pageSource);
+                extract(parse, data, pageSource);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         int count = 0;
         for (StructData resultData : allResult) {
@@ -142,7 +147,7 @@ public class CCGP_DaLian extends WebGeneral {
         if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
             try {
                 try {
-                    currentPage = Integer.parseInt(Util.match("index_(\\d+)", url)[1]);
+                    currentPage = Integer.parseInt(Util.match("EVENTARGUMENT=(\\d+)", url)[1]);
                 } catch (Exception ignore) {
                 }
                 String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
@@ -215,15 +220,15 @@ public class CCGP_DaLian extends WebGeneral {
 
     protected String getAuthor(Document parse, String query_sign) {
         String author = "";
-        String[] authorRelus = relus.getJSONObject(query_sign).getString("authorRelu").split("\\|");
         try {
+            String[] authorRelus = relus.getJSONObject(query_sign).getString("authorRelu").split("\\|");
             for (String authorRelu : authorRelus) {
                 try {
                     author = parse.select(authorRelu).get(0).text();
                 } catch (Exception e) {
                     logger.error(e.toString());
                 }
-                if (author.length() > 0) {
+                if (author.length() > 0 && !author.equals("")) {
                     break;
                 }
             }
