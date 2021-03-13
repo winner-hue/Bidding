@@ -57,7 +57,6 @@ public class CCGP_GuiZhou extends WebGeneral {
     protected void setValue() {
         cityIdRelu = 24;
         nodeListRelu = "div.xnrx ul li";
-        titleRelu = "h3";
         fullcontentRelu = "div[style=xnrx]";
     }
 
