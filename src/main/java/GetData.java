@@ -1,6 +1,4 @@
-import com.alibaba.druid.util.Base64;
 import site.*;
-import sun.misc.BASE64Encoder;
 
 /**
  * 该站点有
@@ -25,6 +23,8 @@ public class GetData {
 //        new CCGP_JiangXi().start();
 //        new CCGP_YunNan().start();
 //        new CCGP_GuiZhou().start();
-        new CCGP_DaLian().start();
+//        new CCGP_DaLian().start();
+//        new CCGP_QingDao().start();
+        new CCGP_NingBo().start();
     }
 }
