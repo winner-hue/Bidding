@@ -23,8 +23,5 @@ public class GetData {
 //        new CCGP_JiangXi().start();
 //        new CCGP_YunNan().start();
 //        new CCGP_GuiZhou().start();
-//        new CCGP_DaLian().start();
-//        new CCGP_QingDao().start();
-        new CCGP_NingBo().start();
     }
 }

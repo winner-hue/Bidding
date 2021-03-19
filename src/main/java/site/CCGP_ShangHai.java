@@ -158,7 +158,7 @@ public class CCGP_ShangHai extends WebGeneral{
     }
 
     protected String getDetail(JSONObject parse, Document doc) {
-        return doc.text();
+        return doc.outerHtml();
     }
 
     protected String getPrice(JSONObject parse, Document doc) {

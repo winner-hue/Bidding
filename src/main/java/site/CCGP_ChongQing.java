@@ -91,7 +91,7 @@ public class CCGP_ChongQing extends WebGeneral {
             data.setPrice(price);
             String detail = null;
             try {
-                detail = Jsoup.parse(jo.getString("html")).text();
+                detail = Jsoup.parse(jo.getString("html")).html();
             } catch (Exception ignore) {
             }
             logger.info("detail: " + detail);

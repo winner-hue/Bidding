@@ -261,7 +261,7 @@ public class WebGeneral extends Thread {
             String content = "";
             for (String relu : this.fullcontentRelu.split("\\|")) {
                 try {
-                    content = content + parse.select(relu.trim()).get(0).text();
+                    content = content + parse.select(relu.trim()).outerHtml().replaceAll("\\'", "\\\\'");
                 } catch (Exception ignore) {
                 }
             }

@@ -125,7 +125,7 @@ public class CCGP_HuNan extends WebGeneral {
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < elements.size(); i++) {
                     if (i > 0) {
-                        builder.append(elements.get(i).text());
+                        builder.append(elements.get(i).html());
                     }
                 }
                 content = builder.toString();
