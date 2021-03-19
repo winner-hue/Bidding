@@ -87,7 +87,7 @@ public class CCGP_QingDao extends WebGeneral{
             }
         }
         for (String url : urls) {
-            logger.info("当前开始url： " + url);
+            logger.info("当前开始url：" + url);
             this.baseUrl = url.split("/sdgp2014")[0];
             startRun(retryTime, url, 0);
         }
@@ -116,10 +116,12 @@ public class CCGP_QingDao extends WebGeneral{
             String tempUrl = data.getArticleurl();
             String pageSource = null;
             try {
+                logger.info("准备开始请求：" + tempUrl);
                 pageSource = getHttpBody(retryTime, tempUrl);
                 Document parse = Jsoup.parse(pageSource);
                 String colcode = Util.match("c0-e1=string:(.*)&c0-e2", url)[1];
                 extract(parse, data, colcode);
+                logger.info("解析完成：");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -204,7 +206,7 @@ public class CCGP_QingDao extends WebGeneral{
         try {
             for (String priceRelu : priceRelus) {
                 try {
-                    detail_str = parse.select(priceRelu).html();
+                    detail_str = parse.select(priceRelu).outerHtml();
                 } catch (Exception e) {
                     logger.error(e.toString());
                 }
@@ -294,6 +296,7 @@ public class CCGP_QingDao extends WebGeneral{
                     resultData.setAdd_time_name(add_time_name);
                 } catch (Exception ignore) {
                     logger.error(ignore.toString());
+                    continue;
                 }
                 int catIdByText = -1;
                 try {
@@ -307,6 +310,7 @@ public class CCGP_QingDao extends WebGeneral{
                 resultData.setCity_id(cityIdRelu);
                 String title = single[1];
                 resultData.setTitle(title);
+                resultData.setDescription(title);
                 allResults.add(resultData);
             }
         } catch (Exception e) {

@@ -83,7 +83,7 @@ public class CCGP_NingBo extends WebGeneral {
         String __VIEWSTATE = Util.match("__VIEWSTATE\" value=\"(.*)\"", generateId_str)[1];
         final String[] query_signs = {"zcyNotice.aspx?noticetype=60", "zcyNotice.aspx?noticetype=11", "zcyNotice.aspx?noticetype=12", "zcyNotice.aspx?noticetype=13", "zcyNotice.aspx?noticetype=2", "zcyNotice.aspx?noticetype=4", "zcyNotice.aspx?noticetype=21", "zcyNotice.aspx?noticetype=3", "zcyNotice.aspx?noticetype=51", "zcyNotice.aspx?noticetype=53", "zcyNotice.aspx?noticetype=54", "zcyNotice.aspx?noticetype=6", "zcyNotice.aspx?noticetype=7", "zcyNotice.aspx?noticetype=99", "zcyNotice.aspx?noticePeriod=1"}, urls = new String[query_signs.length];
         for (int i = 0; i < query_signs.length; i++) {
-            urls[i] = "http://www.ccgp-ningbo.gov.cn/project/".concat(query_signs[i].concat("&#44__VIEWSTATE=" + __VIEWSTATE + "&__EVENTARGUMENT=1&__EVENTTARGET=gdvNotice3$ctl18$AspNetPager1"));
+            urls[i] = "http://www.ccgp-ningbo.gov.cn/project/".concat(query_signs[i].concat("&#44__VIEWSTATE=" + __VIEWSTATE + "&__EVENTARGUMENT=1&__EVENTTARGET=gdvNotice3$ctl18$AspNetPager1&gdvNotice3$ctl18$AspNetPager1_input=1"));
         }
         this.main(urls);
         Bidding.cout.decrementAndGet();
@@ -128,7 +128,7 @@ public class CCGP_NingBo extends WebGeneral {
 
     @Override
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
-        return super.getNextPageUrl(document, currentPage, httpBody, url);
+        return url.replaceAll("EVENTARGUMENT=(\\d+)", "EVENTARGUMENT=" + (currentPage + 1)).replaceAll("gdvNotice3\\$ctl18\\$AspNetPager1_input=(\\d+)", "gdvNotice3\\$ctl18\\$AspNetPager1_input="+currentPage);
     }
 
     @Override
@@ -146,7 +146,8 @@ public class CCGP_NingBo extends WebGeneral {
             try {
                 pageSource = getHttpBody(retryTime, tempUrl);
                 Document parse = Jsoup.parse(pageSource);
-                extract(parse, data, pageSource);
+                String colcode = Util.match("noticetype=(\\d+)", url)[1];
+                extract(parse, data, colcode);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -187,9 +188,7 @@ public class CCGP_NingBo extends WebGeneral {
     }
 
     @Override
-    protected void extract(Document parse, StructData data, String pageSource) {
-        String url = data.getArticleurl();
-        String colcode = url.substring(url.indexOf("CategoryNum=") + 12);
+    protected void extract(Document parse, StructData data, String colcode) {
         int cityId = cityIdRelu;
         logger.info("cityId: " + cityId);
         String author = getAuthor(parse, colcode);
@@ -271,6 +270,20 @@ public class CCGP_NingBo extends WebGeneral {
     }
 
     @Override
+    protected String getUrl(Element element) {
+        Element a = null;
+        String href = null;
+        try {
+            a = element.select("td:eq(2) a").get(0);
+            href = a.attr("href");
+        } catch (Exception e) {
+            return "";
+        }
+        href = this.baseUrl + href;
+        return href;
+    }
+
+    @Override
     protected List<StructData> getAllResult(Document parse, String httpBody) {
         List<StructData> allResults = new ArrayList<StructData>();
         Elements cListBid = parse.select(this.nodeListRelu);
@@ -280,18 +293,22 @@ public class CCGP_NingBo extends WebGeneral {
             try {
                 // 获取链接
                 String url = getUrl(element);
+                if (url.equals("") || url == null){
+                    continue;
+                }
                 logger.info("url: " + url);
                 resultData.setArticleurl(url);
-                String hits = element.select("td:eq(2)").get(0).text();
+                String hits = element.select("td:eq(3)").get(0).text();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = format.parse(hits);
                 long addTime = date.getTime();
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    break;
+                    allResults.removeAll(allResults);
+                    return allResults;
                 }
-                String title = element.select("td:eq(1) a").get(0).text();
+                String title = element.select("td:eq(2) a").get(0).text();
                 resultData.setTitle(title);
                 resultData.setDescription(title);
                 format = new SimpleDateFormat("yyyy-MM-dd HH:mm");

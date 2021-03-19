@@ -192,6 +192,9 @@ public class Download {
                 provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
+        } else {
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            httpPost.setConfig(config);
         }
         try {
             CloseableHttpResponse response = httpClient.execute(httpPost);
@@ -258,6 +261,9 @@ public class Download {
                 provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
+        } else {
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            httpPost.setConfig(config);
         }
         try {
             CloseableHttpResponse response = httpClient.execute(httpPost);
@@ -277,13 +283,16 @@ public class Download {
         httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(1000).setConnectTimeout(1000).setSocketTimeout(1000).build();
             httpGet.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
                 provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
+        } else {
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            httpGet.setConfig(config);
         }
         try {
             CloseableHttpResponse response = httpClient.execute(httpGet);
@@ -314,6 +323,9 @@ public class Download {
                 provider.setCredentials(new AuthScope(host), new UsernamePasswordCredentials(proxy.getUser(), proxy.getPwd()));
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
+        } else {
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            httpGet.setConfig(config);
         }
         try {
             CloseableHttpResponse response = httpClient.execute(httpGet);

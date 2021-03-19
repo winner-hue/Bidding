@@ -147,7 +147,7 @@ public class CCGP_DaLian extends WebGeneral {
         if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
             try {
                 try {
-                    currentPage = Integer.parseInt(Util.match("EVENTARGUMENT=(\\d+)", url)[1]);
+                    currentPage = Integer.parseInt(Util.match("__EVENTARGUMENT=(\\d+)", url)[1]);
                 } catch (Exception ignore) {
                 }
                 String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
@@ -188,7 +188,7 @@ public class CCGP_DaLian extends WebGeneral {
     protected String getDetail(Document parse, String query_sign) {
         String detail_str = "";
         try {
-            detail_str = parse.select(fullcontentRelu).html();
+            detail_str = parse.select(fullcontentRelu).outerHtml();
         } catch (Exception e) {
             logger.error(e.toString());
         }
