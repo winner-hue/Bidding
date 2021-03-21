@@ -26,6 +26,9 @@ public class GetData {
 //        new CCGP_DaLian().start();
 //        new CCGP_QingDao().start();
 //        new CCGP_NingBo().start();
-        new CCGP_ChinaBidding().start();
+//        new CCGP_ChinaBidding().start();
+//        new CCGP_XiaMen().start();
+//        new CCGP_HeiLongJiang().start();
+        new CCGP_GanSu().start();
     }
 }
