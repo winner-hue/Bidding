@@ -31,6 +31,8 @@ public class GetData {
 //        new CCGP_HeiLongJiang().start();
 //        new CCGP_GanSu().start();
 //        new CCGP_AnHui().start();
-        new CCGP_GuangXi().start();
+//        new CCGP_GuangXi().start();
+//        new CCGP_QingHai().start();
+        new CCGP_XinJiang().start();
     }
 }
