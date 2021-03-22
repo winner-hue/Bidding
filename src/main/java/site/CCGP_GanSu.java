@@ -35,7 +35,34 @@ import static util.Download.getHttpBody;
 public class CCGP_GanSu extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_HeiLongJiang.class);
     private static HashMap<String, String> heads = new HashMap<String, String>();
-    private static String relu = "";
+    private static String relu = "{'c1280501': {\n" +
+            "    'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c1280502': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c1280101': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c1280103': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c1280104': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c1280102': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：) u'},\n" +
+            "    'c12806': {\n" +
+            "        'priceRelu': 'p:containsOwn(预算金额：)'},\n" +
+            "    'c12802': {\n" +
+            "        'priceRelu': 'table.MsoTableGrid tbody tr:eq(1) td:eq(2) p span',\n" +
+            "        'price_unit': '万元'},\n" +
+            "    'c12804': {\n" +
+            "        'priceRelu': 'table.MsoTableGrid tbody tr:eq(1) td:eq(2) p span',\n" +
+            "        'price_unit': '万元'},\n" +
+            "    'c12803': {\n" +
+            "        'priceRelu': ''},\n" +
+            "    'c12807': {\n" +
+            "        'priceRelu': ''},\n" +
+            "    'c12820': {\n" +
+            "        'priceRelu': 'span:containsOwn(合计：)',\n" +
+            "        'price_unit': '元'}\n" +
+            "}";
     public static JSONObject relus = JSONObject.parseObject(relu);
     public static String cookies = null;
 
@@ -83,13 +110,14 @@ public class CCGP_GanSu extends WebGeneral {
                 e.printStackTrace();
             }
         }
-        String doSearchmxarticlels = "http://www.ccgp-gansu.gov.cn/web/doSearchmxarticlels.action?limit=20&start=0";
+        String doSearchmxarticlels = "http://www.ccgp-gansu.gov.cn/web/doSearchmxarticlels.action?limit=20&start=0", classname = null;
         for (String url : urls) {
             logger.info("当前开始url： " + url);
             this.baseUrl = url.split("/web")[0];
             cookies = result_cookie(url, "utf-8", 2);
             heads.put("Cookie", cookies);
-            startRun(retryTime, doSearchmxarticlels, 0);
+            classname = Util.match("classname=(.*)", url)[1];
+            startRun(retryTime, doSearchmxarticlels, 0, classname);
         }
     }
 
@@ -98,8 +126,7 @@ public class CCGP_GanSu extends WebGeneral {
         return url.replaceAll("start=(\\d+)", "start=" + (currentPage + 20));
     }
 
-    @Override
-    protected void startRun(int retryTime, String url, int currentPage) {
+    protected void startRun(int retryTime, String url, int currentPage, String classname) {
         String httpBody = getHttpBody(retryTime, url, heads);
         if (httpBody == null) {
             logger.error("下载失败， 直接返回为空");
@@ -113,7 +140,7 @@ public class CCGP_GanSu extends WebGeneral {
             try {
                 pageSource = getHttpBody(retryTime, tempUrl);
                 Document parse = Jsoup.parse(pageSource);
-                extract(parse, data, pageSource);
+                extract(parse, data, classname);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -145,7 +172,7 @@ public class CCGP_GanSu extends WebGeneral {
                 }
                 String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
                 if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
-                    startRun(retryTime, nextPageUrl, (currentPage + 1));
+                    startRun(retryTime, nextPageUrl, (currentPage + 1), classname);
                 }
             } catch (Exception e) {
                 logger.error("下一页提取错误：" + e, e);
@@ -154,8 +181,16 @@ public class CCGP_GanSu extends WebGeneral {
     }
 
     @Override
-    protected void extract(Document parse, StructData data, String pageSource) {
-        super.extract(parse, data, pageSource);
+    protected void extract(Document parse, StructData data, String classname) {
+        String price = getPrice(parse, classname);
+        logger.info("price: " + price);
+        data.setPrice(price);
+        String detail = getDetail(parse);
+        logger.info("detail: " + detail);
+        data.setFullcontent(detail);
+        String annex = getAnnex(parse);
+        logger.info("annex: " + annex);
+        data.setFjxxurl(annex);
     }
 
     @Override
@@ -168,9 +203,27 @@ public class CCGP_GanSu extends WebGeneral {
         return super.getDetail(parse);
     }
 
-    @Override
-    protected String getPrice(Document parse) {
-        return super.getPrice(parse);
+    protected String getPrice(Document parse, String classname) {
+        String price_str = "";
+        String[] priceRelus = relus.getJSONObject(classname).getString("priceRelu").split("\\|");
+        try {
+            for (String priceRelu : priceRelus) {
+                try {
+                    price_str = parse.select(priceRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (price_str.length() > 0) {
+                    if (relus.getJSONObject(classname).containsKey("price_unit") && !price_str.contains(relus.getJSONObject(classname).getString("price_unit"))) {
+                        price_str = price_str + relus.getJSONObject(classname).getString("price_unit");
+                    }
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return price_str;
     }
 
     @Override

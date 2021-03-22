@@ -29,6 +29,8 @@ public class GetData {
 //        new CCGP_ChinaBidding().start();
 //        new CCGP_XiaMen().start();
 //        new CCGP_HeiLongJiang().start();
-        new CCGP_GanSu().start();
+//        new CCGP_GanSu().start();
+//        new CCGP_AnHui().start();
+        new CCGP_GuangXi().start();
     }
 }
