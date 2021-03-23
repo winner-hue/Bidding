@@ -61,7 +61,7 @@ public class CCGP_GuangXi extends WebGeneral {
 
     @Override
     protected void setValue() {
-        cityIdRelu = 10;
+        cityIdRelu = 16;
         fullcontentRelu = "div#print-content";
     }
 

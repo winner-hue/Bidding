@@ -50,7 +50,7 @@ public class CCGP_XinJiang extends WebGeneral {
 
     @Override
     protected void setValue() {
-        cityIdRelu = 10;
+        cityIdRelu = 30;
         fullcontentRelu = "div#print-content";
     }
 
