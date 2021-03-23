@@ -27,17 +27,14 @@ public class CCGP_GuangDong extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_GuangDong.class);
     private static String relu = "{'0005': {\n" +
             "    'authorRelu': 'h6:containsOwn(1.釆购人信息) + p|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span',\n" +
-            "    'priceRelu': 'span:containsOwn(预算金额：)',\n" +
             "    'fullcontentRelu': 'div.zw_c_c_cont '},\n" +
             "    '0006': {\n" +
             "        'authorRelu': 'p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)',\n" +
-            "        'priceRelu': 'span:containsOwn(预算金额：)',\n" +
             "        'fullcontentRelu': 'div.zw_c_c_cont'},\n" +
             "    '0008': {\n" +
             "        'authorRelu': 'p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)',\n" +
-            "        'priceRelu': 'span:containsOwn(预算金额：)',\n" +
             "        'fullcontentRelu': 'div.zw_c_c_cont'},\n" +
-            "    '-3': {'authorRelu': 'span:containsOwn(采购人名称：) + span', 'priceRelu': 'span:containsOwn(预算金额：)',\n" +
+            "    '-3': {'authorRelu': 'span:containsOwn(采购人名称：) + span',\n" +
             "           'fullcontentRelu': 'div.zw_c_c_cont'}}";
     public static JSONObject relus = JSONObject.parseObject(relu);
 
@@ -51,7 +48,7 @@ public class CCGP_GuangDong extends WebGeneral {
         List<String> urls = new ArrayList<String>();
         for (String channelCode : channelCodes) {
             for (int i = 0; i < citys.size(); i++) {
-                urls.add(url.concat("channelCode=".concat(channelCode).concat("&operateDateFrom=".concat(start_time).concat("&operateDateTo=".concat(end_time).concat("&performOrgName=&poor=&purchaserOrgName=&sitewebId=".concat(citys.getString(i)).concat("&stockIndexName=&stockNum=&stockTypes=&title=&pageIndex=1&pageSize=15"))))));
+                urls.add(url.concat("&#44channelCode=".concat(channelCode).concat("&operateDateFrom=".concat(start_time).concat("&operateDateTo=".concat(end_time).concat("&performOrgName=&poor=&purchaserOrgName=&sitewebId=".concat(citys.getString(i)).concat("&stockIndexName=&stockNum=&stockTypes=&title=&pageIndex=1&pageSize=15"))))));
             }
         }
         this.main(urls.toArray(new String[urls.size()]));
@@ -64,7 +61,7 @@ public class CCGP_GuangDong extends WebGeneral {
             }
             for (int s = 0; s < diqus.size(); s++) {
                 for (String channelCode : channelCodes) {
-                    urls.add(url.concat("channelCode=".concat(channelCode).concat("&operateDateFrom=".concat(start_time).concat("&operateDateTo=".concat(end_time).concat("&performOrgName=&poor=&purchaserOrgName=&sitewebId=".concat(diqus.getString(i)).concat("&stockIndexName=&stockNum=&stockTypes=&title=&pageIndex=1&pageSize=15"))))));
+                    urls.add(url.concat("&#44channelCode=".concat(channelCode).concat("&operateDateFrom=".concat(start_time).concat("&operateDateTo=".concat(end_time).concat("&performOrgName=&poor=&purchaserOrgName=&sitewebId=".concat(diqus.getString(i)).concat("&stockIndexName=&stockNum=&stockTypes=&title=&pageIndex=1&pageSize=15"))))));
                 }
             }
             this.main(urls.toArray(new String[urls.size()]));
@@ -77,6 +74,9 @@ public class CCGP_GuangDong extends WebGeneral {
     protected void setValue() {
         cityIdRelu = 10;
         fullcontentRelu = "div#print-content";
+        nodeListRelu = "ul.m_m_c_list li";
+        titleRelu = "div.zw_c_c_title";
+        priceRelu = "span:containsOwn(预算金额：)";
     }
 
     @Override
