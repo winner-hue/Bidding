@@ -73,7 +73,7 @@ public class CCGP_GuangDong extends WebGeneral {
     @Override
     protected void setValue() {
         cityIdRelu = 10;
-        fullcontentRelu = "div#print-content";
+        fullcontentRelu = "div.zw_c_c_cont";
         nodeListRelu = "ul.m_m_c_list li";
         titleRelu = "div.zw_c_c_title";
         priceRelu = "span:containsOwn(预算金额：)";
