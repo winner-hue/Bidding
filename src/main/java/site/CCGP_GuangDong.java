@@ -25,17 +25,13 @@ import static util.Download.getHttpBody;
 
 public class CCGP_GuangDong extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_GuangDong.class);
-    private static String relu = "{'0005': {\n" +
-            "    'authorRelu': 'h6:containsOwn(1.釆购人信息) + p|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span',\n" +
-            "    'fullcontentRelu': 'div.zw_c_c_cont '},\n" +
-            "    '0006': {\n" +
-            "        'authorRelu': 'p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)',\n" +
-            "        'fullcontentRelu': 'div.zw_c_c_cont'},\n" +
-            "    '0008': {\n" +
-            "        'authorRelu': 'p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)',\n" +
-            "        'fullcontentRelu': 'div.zw_c_c_cont'},\n" +
-            "    '-3': {'authorRelu': 'span:containsOwn(采购人名称：) + span',\n" +
-            "           'fullcontentRelu': 'div.zw_c_c_cont'}}";
+    private static String relu = "{\"0006\": {\n" +
+            "    \"authorRelu\": \"p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)\"},\n" +
+            "    \"0005\": {\n" +
+            "        \"authorRelu\": \"h6:containsOwn(1.釆购人信息) + p|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span\"},\n" +
+            "    \"-3\": {\"authorRelu\": \"span:containsOwn(采购人名称：) + span\"},\n" +
+            "    \"0008\": {\n" +
+            "        \"authorRelu\": \"p:has(span:has(span:containsOwn(1.釆购人信息))) + p span:eq(1) span|span:containsOwn(采购人名称：)|p:has(span:containsOwn(1.釆购人信息)) + p span|span:containsOwn(采购人：)\"}}";
     public static JSONObject relus = JSONObject.parseObject(relu);
 
     @Override
@@ -77,6 +73,8 @@ public class CCGP_GuangDong extends WebGeneral {
         nodeListRelu = "ul.m_m_c_list li";
         titleRelu = "div.zw_c_c_title";
         priceRelu = "span:containsOwn(预算金额：)";
+        addTimeRelu = "em";
+        addTimeParse = "yyyy-MM-dd";
     }
 
     @Override
@@ -129,7 +127,8 @@ public class CCGP_GuangDong extends WebGeneral {
             try {
                 pageSource = getHttpBody(retryTime, tempUrl);
                 Document parse = Jsoup.parse(pageSource);
-                extract(parse, data, pageSource);
+                String colcode = Util.match("channelCode=(.*?)&", url)[1];
+                extract(parse, data, colcode);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -170,36 +169,43 @@ public class CCGP_GuangDong extends WebGeneral {
     }
 
     @Override
+    protected String getPrice(Document parse) {
+        String price = null;
+        try {
+            price = parse.select(this.priceRelu).get(0).text();
+            price = price.contains("：")? price.split("：")[1]: price;
+        } catch (Exception e) {
+            return "";
+        }
+        return price;
+    }
+
+    @Override
     protected void extract(Document parse, StructData data, String colcode) {
+        logger.info("==================================");
+        String title = getTitle(parse);
+        data.setTitle(title);
+        String author = getAuthor(parse, colcode);
+        logger.info("author: " + author);
+        data.setAuthor(author);
+        int catIdByText = -1;
+        try {
+            catIdByText = getCatIdByText(title);
+            logger.info("catId: " + catIdByText);
+        } catch (Exception ignore) {
+        }
+        data.setCat_id(catIdByText);
+        logger.info("cityId: " + cityIdRelu);
+        data.setDescription(title);
+        String price = getPrice(parse);
+        logger.info("price: " + price);
+        data.setPrice(price);
         String detail = getDetail(parse);
         logger.info("detail: " + detail);
         data.setFullcontent(detail);
         String annex = getAnnex(parse);
         logger.info("annex: " + annex);
         data.setFjxxurl(annex);
-    }
-
-    protected String getPrice(Document parse, String query_sign) {
-        String price_str = "";
-        String[] priceRelus = relus.getJSONObject(query_sign).getString("priceRelu").split("\\|");
-        try {
-            for (String priceRelu : priceRelus) {
-                try {
-                    price_str = parse.select(priceRelu).get(0).text();
-                } catch (Exception e) {
-                    logger.error(e.toString());
-                }
-                if (price_str.length() > 0) {
-                    if (relus.getJSONObject(query_sign).containsKey("price_unit") && !price_str.contains(relus.getJSONObject(query_sign).getString("price_unit"))) {
-                        price_str = price_str + relus.getJSONObject(query_sign).getString("price_unit");
-                    }
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.toString());
-        }
-        return price_str;
     }
 
     protected String getAuthor(Document parse, String query_sign) {
@@ -223,6 +229,19 @@ public class CCGP_GuangDong extends WebGeneral {
     }
 
     @Override
+    protected String getUrl(Element element) {
+        Element a = null;
+        String href = null;
+        try {
+            a = element.select("a").get(1);
+            href = this.baseUrl + a.attr("href");
+        } catch (Exception e) {
+            return "";
+        }
+        return href;
+    }
+
+    @Override
     protected List<StructData> getAllResult(Document parse, String httpBody) {
         List<StructData> allResults = new ArrayList<StructData>();
         Elements cListBid = parse.select(this.nodeListRelu);
@@ -236,9 +255,7 @@ public class CCGP_GuangDong extends WebGeneral {
                 }
                 logger.info("url: " + url);
                 resultData.setArticleurl(url);
-                String hits = element.select(addTimeRelu).get(0).text().trim().replace("[", "").replace("]", "");
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                Date date = format.parse(hits);
+                Date date = getAddTime(element);
                 long addTime = date.getTime();
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
@@ -246,10 +263,7 @@ public class CCGP_GuangDong extends WebGeneral {
                     allResults.removeAll(allResults);
                     return allResults;
                 }
-                String title = element.select(titleRelu).get(0).attr("title");
-                resultData.setTitle(title);
-                resultData.setDescription(title);
-                format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
                 resultData.setAdd_time_name(add_time_name);
