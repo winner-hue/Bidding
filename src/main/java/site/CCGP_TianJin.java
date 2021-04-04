@@ -9,9 +9,11 @@ import org.slf4j.LoggerFactory;
 import start.Bidding;
 import util.Util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /*
 该站点请求过快会返回空数据，建议代理， 或者降低请求频率
@@ -91,7 +93,7 @@ public class CCGP_TianJin extends WebGeneral {
         Date parse = null;
         try {
             String addTime = element.select(this.addTimeRelu).get(0).text();
-            parse = new Date(addTime);
+            parse = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US).parse(addTime);
         } catch (Exception e) {
             logger.error("获取日期错误：" + e, e);
         }

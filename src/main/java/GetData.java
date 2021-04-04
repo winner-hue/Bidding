@@ -7,7 +7,7 @@ public class GetData {
 
     public static void main(String[] args) throws Exception {
 //        new CCGP_BeiJing().start();
-//        new CCGP_TianJin().start();
+        new CCGP_TianJin().start();
 //        new CCGP_ChongQing().start();
 //        new CCGP_HeBei().start();
 //        new CCGP_HeNan().start();
@@ -36,6 +36,6 @@ public class GetData {
 //        new CCGP_XinJiang().start();
 //        new CCGP_JiangSu().start();
 //        new CCGP_ZheJiang().start();
-        new CCGP_GuangDong().start();
+//        new CCGP_GuangDong().start();
     }
 }
