@@ -12,11 +12,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Bidding {
     private static Logger logger = LoggerFactory.getLogger(Bidding.class);
     public static Properties properties;
+    public static Properties properties_cat;
     public static AtomicInteger cout = new AtomicInteger();
     public static int limitThread = 5;
 
     static {
         properties = Util.getProps("/ccgp.properties");
+        properties_cat = Util.getProps("/cat_mapping.properties");
     }
 
     public static void main(String[] args) {

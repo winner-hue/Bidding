@@ -292,11 +292,23 @@ public class WebGeneral extends Thread {
      * @return
      */
     protected String getAuthor(Document parse) {
+        String author = "";
         try {
-            return parse.select(this.authorRelu).get(0).text();
+            String[] authorRelus = this.authorRelu.split("\\|");
+            for (String authorRelu : authorRelus) {
+                try {
+                    author = parse.select(authorRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (author.length() > 0 && !author.equals("")) {
+                    break;
+                }
+            }
         } catch (Exception e) {
-            return "";
+            logger.error(e.toString());
         }
+        return author;
     }
 
     /**

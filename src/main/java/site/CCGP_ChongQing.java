@@ -9,31 +9,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import po.StructData;
 import start.Bidding;
+import util.SqlPool;
 import util.Util;
 
+import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static util.Download.getHttpBody;
 
 public class CCGP_ChongQing extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_ChongQing.class);
 
     @Override
     protected void setValue() {
-        titleRelu = "h2#titlecandel";
         // 采集类型id规则
         catIdRelu = "h2#titlecandel";
         // 城市id规则
         cityIdRelu = 21;
-        // 采购人规则
-        authorRelu = "p:matchesOwn(采购人：)";
         // 价格规则
         priceRelu = "p:matchesOwn(成交金额：)";
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd HH:mm:ss";
         // 内容规则
-        fullcontentRelu = "div.wrap-post h4,p";
+        fullcontentRelu = "div.wrap-post ng-scope";
     }
 
     @Override
@@ -41,16 +43,109 @@ public class CCGP_ChongQing extends WebGeneral {
         // 获取任务url
         setValue();
         String[] urls = Bidding.properties.getProperty("ccgp.chongqing.url").split(",");
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String endDate = format.format(new Date(System.currentTimeMillis()));
-        String startDate = format.format(new Date(System.currentTimeMillis() - 3 * 30 * 24 * 60 * 60 * 1000L));
-        String[] newUrls = new String[urls.length];
-        for (int i = 0; i < urls.length; i++) {
-            String url = urls[i].replaceAll("DateLine", endDate).replaceAll("DateStart", startDate);
-            newUrls[i] = url;
+        this.main(urls);
+        String start_time = Util.getLastMonth(null, 3), end_time = Util.getLastMonth(null, 0);
+        urls = new String[]{"https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/new?__platDomain__=www.ccgp-chongqing.gov.cn&isResult=1&pi=1&ps=20&type=100,200,201,202,203,204,205,206,207,309,400,401,402,3091,4001",
+                "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/new?__platDomain__=www.ccgp-chongqing.gov.cn&isResult=2&pi=1&ps=20&type=300,302,304,3041,305,306,307,308,309,400"};
+        String[] fs = new String[2];
+        for (int i = 0; i < 2; i++) {
+            fs[i] = urls[i].concat("&endDate=".concat(end_time).concat("&startDate=".concat(start_time)));
         }
-        this.main(newUrls);
+        this.main(fs);
         Bidding.cout.decrementAndGet();
+    }
+
+    @Override
+    protected void main(String[] urls) {
+        int retryTime = 3;
+        SimpleDateFormat format = null;
+        try {
+            String retryTimes = Bidding.properties.getProperty("download_retry_times");
+            retryTime = Integer.parseInt(retryTimes);
+        } catch (Exception ignore) {
+        }
+        try {
+            String deadDateParse = Bidding.properties.getProperty("dead.date");
+            format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date parse = format.parse(deadDateParse);
+            long time = parse.getTime();
+            this.deadDate = new Date(time);
+        } catch (Exception ignore) {
+            try {
+                format = new SimpleDateFormat("yyyy-MM-dd");
+                this.deadDate = format.parse(Util.getLastMonth(null, 3));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        for (String url : urls) {
+            logger.info("当前开始url： " + url);
+            startRun(retryTime, url, 0);
+        }
+    }
+
+    @Override
+    protected void startRun(int retryTime, String url, int currentPage) {
+        int types = 0;
+        if (url.contains("isResult=1")) {
+            types = 1;
+        } else if (url.contains("type=1")) {
+            types = 2;
+        } else if (url.contains("type=2") && !url.contains("__platDomain__")) {
+            types = 3;
+        } else if (url.contains("type=2") && url.contains("__platDomain__")) {
+            types = 4;
+        } else if (url.contains("query.state")) {
+            types = 5;
+        } else {
+            types = 6;
+        }
+        String httpBody = getHttpBody(retryTime, url);
+        if (httpBody == null) {
+            logger.error("下载失败， 直接返回为空");
+            return;
+        }
+        Document document = Jsoup.parse(httpBody);
+        List<StructData> allResult = getAllResult(document, httpBody, types);
+        for (StructData data : allResult) {
+            String tempUrl = data.getArticleurl();
+            String pageSource = getHttpBody(retryTime, tempUrl);
+            Document parse = Jsoup.parse(pageSource);
+            extract(parse, data, pageSource);
+        }
+        int count = 0;
+        for (StructData resultData : allResult) {
+            try {
+                String sql;
+                String tableName = Bidding.properties.getProperty("table.name");
+                if (tableName == null) {
+                    sql = Util.getInsertSql("fa_article", StructData.class, resultData);
+                } else {
+                    sql = Util.getInsertSql(tableName, StructData.class, resultData);
+                }
+                SqlPool.getInstance().getStatement().execute(sql);
+                logger.info("当前插入第：" + count + " 条");
+                ++count;
+            } catch (SQLException e) {
+                logger.error("插入数据错误：" + e, e);
+            }
+        }
+        logger.info("插入成功：" + count + " 条");
+        //添加下一页
+        if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0)) {
+            try {
+                try {
+                    currentPage = Integer.parseInt(Util.match("index_(\\d+)", url)[1]);
+                } catch (Exception ignore) {
+                }
+                String nextPageUrl = getNextPageUrl(document, currentPage, httpBody, url);
+                if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
+                    startRun(retryTime, nextPageUrl, (currentPage + 1));
+                }
+            } catch (Exception e) {
+                logger.error("下一页提取错误：" + e, e);
+            }
+        }
     }
 
     @Override
@@ -134,40 +229,127 @@ public class CCGP_ChongQing extends WebGeneral {
         }
     }
 
-    @Override
-    protected List<StructData> getAllResult(Document parse, String httpBody) {
+    protected List<StructData> getAllResult(Document parse, String httpBody, int type) {
         List<StructData> allResults = new ArrayList<StructData>();
+        JSONArray notices = null;
+        String types = null;
         try {
-            JSONArray notices = JSON.parseObject(httpBody).getJSONArray("notices");
+            String[] f = new String[]{"notices", "data", "datas", "contracts"};
+            for (String ky:f) {
+                try {
+                    notices = JSON.parseObject(httpBody).getJSONArray(ky);
+                    if (notices.size() > 0) {
+                        types = ky;
+                        break;
+                    }
+                } catch (Exception e) {
+                }
+            }
             for (int i = 0; i < notices.size(); i++) {
                 JSONObject jo = notices.getJSONObject(i);
                 logger.info("===========================================");
                 StructData resultData = new StructData();
                 // 获取链接
+                String url = null, json_url = null;
                 try {
+                    String title = jo.getString("title");
+                    logger.info("title: " + title);
+                    resultData.setTitle(title);
+                    resultData.setDescription(title);
                     String id = jo.getString("id");
-                    String url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/" + id;
+                    switch (type) {
+                        case 1:
+                            url = "https://www.ccgp-chongqing.gov.cn/notices/detail/".concat(id).concat("?title=".concat(title));
+                            json_url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/".concat(id).concat("?__platDomain__=www.ccgp-chongqing.gov.cn");
+                            break;
+                        case 2:
+                            url = "https://www.ccgp-chongqing.gov.cn/stock-resources-front/demandView?id=".concat(id);
+                            json_url = "https://www.ccgp-chongqing.gov.cn/yw-gateway/demand/demand/".concat(id).concat("/front");
+                            break;
+                        case 3:
+                            url = "https://www.ccgp-chongqing.gov.cn/stock-resources-front/intentionView?id=".concat(id);
+                            json_url = "https://www.ccgp-chongqing.gov.cn/yw-gateway/demand/demand/".concat(id).concat("/front");
+                            break;
+                        case 4:
+                            url = "https://www.ccgp-chongqing.gov.cn/disclosures/".concat(id).concat("?type=0&title=".concat(title));
+                            json_url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/singles/preview/".concat(id).concat("?__platDomain__=www.ccgp-chongqing.gov.cn");
+                            break;
+                        case 5:
+                            url = "https://www.ccgp-chongqing.gov.cn/contractpost/manage_toContractViewPage.action?updateId=".concat(id);
+                            json_url = "https://www.ccgp-chongqing.gov.cn/contractpost/manage_getContractById.action&#44updateId=".concat(id);
+                            break;
+                        case 6:
+                            url = "https://www.ccgp-chongqing.gov.cn/notices/detail/".concat(id).concat("?title=".concat(title));
+                            json_url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/".concat(id).concat("?__platDomain__=www.ccgp-chongqing.gov.cn");
+                            break;
+                    }
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
-                    // 获取链接md5值， 用于排重
-                    String md5 = Util.stringToMD5(url);
-                    logger.info("md5: " + md5);
-                    //resultData.setMd5(md5);
                 } catch (Exception ignore) {
                     continue;
                 }
                 // 获取发布时间
                 try {
-                    Long issueTime = jo.getLong("issueTime");
-                    logger.info("addTime: " + issueTime);
-                    if (issueTime - this.deadDate.getTime() < 0) {
-                        logger.info("发布时间早于截止时间， 不添加该任务url");
-                        continue;
+                    String[] time_type = new String[]{"issueTime", "createTime", "time"};
+                    Long addTime = null;
+                    for (String ky:time_type) {
+                        try {
+                            addTime = jo.getLong(ky);
+                            if (addTime > 0) {
+                                break;
+                            }
+                        } catch (Exception e) {
+                        }
                     }
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    String add_time_name = format.format(issueTime);
-                    resultData.setAdd_time(issueTime);
+                    logger.info("addTime: " + addTime);
+                    if (addTime - this.deadDate.getTime() < 0) {
+                        logger.info("发布时间早于截止时间， 不添加该任务url");
+                        allResults.removeAll(allResults);
+                        return allResults;
+                    }
+                    SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    String add_time_name = formats.format(addTime);
+                    resultData.setAdd_time(addTime);
                     resultData.setAdd_time_name(add_time_name);
+                    String price = null;
+                    if (jo.containsKey("money")) {
+                        price = jo.getString("money");
+                        if (type == 3) {
+                            price = price + "万元";
+                        } else {
+                            price = price + "元";
+                        }
+                    } else if (jo.containsKey("projectBudget") && type != 6) {
+                        price = jo.getString("projectBudget") + "元";
+                    } else {
+                        String[] info_type = new String[]{"notice", "data", "singles", "contract"};
+                        String pageSource = getHttpBody(5, json_url);
+                        JSONObject data = JSONObject.parseObject(pageSource);
+                        String htmls = null;
+                        for (String ky:info_type) {
+                            try {
+                                htmls = data.getJSONObject(ky).getString("html");
+                                break;
+                            } catch (Exception e) {
+                            }
+                        }
+                        price = getPrice(Jsoup.parse(htmls));
+                    }
+                    resultData.setPrice(price);
+                    String[] author_type = new String[]{"inputOrgName", "buyerName", "createOrgName"};
+                    String author = null;
+                    for (String ky:author_type) {
+                        try {
+                            author = jo.getString(ky);
+                            if (author.equals("") && author != null) {
+                                break;
+                            }
+                            break;
+                        } catch (Exception e) {
+                        }
+                    }
+                    resultData.setAuthor(author);
+                    logger.info("addTime: " + addTime);
                 } catch (Exception e) {
                     logger.error("获取时间错误：" + e, e);
                     continue;
@@ -185,8 +367,16 @@ public class CCGP_ChongQing extends WebGeneral {
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
         String nextPageUrl = "";
         try {
-            String id = Util.match("pi=(\\d+)", url)[1];
-            nextPageUrl = url.replaceAll("pi=\\d+", "pi=" + (Integer.parseInt(id) + 1));
+            if (url.contains("&pi=")) {
+                String id = Util.match("&pi=(\\d+)", url)[1];
+                nextPageUrl = url.replaceAll("&pi=\\d+", "&pi=" + (Integer.parseInt(id) + 1));
+            } else if (url.contains("page=")) {
+                String id = Util.match("page=(\\d+)", url)[1];
+                nextPageUrl = url.replaceAll("page=\\d+", "page=" + (Integer.parseInt(id) + 1));
+            } else {
+                String id = Util.match("current=(\\d+)", url)[1];
+                nextPageUrl = url.replaceAll("current=\\d+", "current=" + (Integer.parseInt(id) + 1));
+            }
         } catch (Exception ignore) {
         }
         logger.info("nextPageUrl: " + nextPageUrl);

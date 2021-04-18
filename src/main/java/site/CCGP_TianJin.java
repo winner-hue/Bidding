@@ -1,6 +1,7 @@
 package site;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,6 +21,7 @@ import java.util.Locale;
  */
 public class CCGP_TianJin extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_TianJin.class);
+    private static JSONObject cats;
 
     @Override
     protected void setValue() {
@@ -29,7 +31,7 @@ public class CCGP_TianJin extends WebGeneral {
 
         cityIdRelu = 23;
         // 采集类型id规则
-        catIdRelu = "div#crumbs";
+        catIdRelu = "div#crumbs a:eq(1)";
         // 采购人规则
         authorRelu = "div:matchesOwn(1.采购人信息)+div";
         // 发布时间规则
@@ -49,6 +51,7 @@ public class CCGP_TianJin extends WebGeneral {
         // 获取任务url
         setValue();
         String[] urls = Bidding.properties.getProperty("ccpg.tianjin.url").split(",");
+        cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("tianjin_cat"));
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }
@@ -122,14 +125,19 @@ public class CCGP_TianJin extends WebGeneral {
     }
 
     @Override
-    protected String getAnnex(Document parse) {
-        return "";
+    protected int getCatId(Document parse) {
+        try {
+            String text = parse.select(this.catIdRelu).get(0).text().split("\\-")[0];
+            return cats.getIntValue(text);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
     @Override
     protected String getDescription(Document parse) {
         try {
-            return parse.select(this.descriptionRelu).get(0).attr("content");
+            return parse.select(this.titleRelu).get(0).text();
         } catch (Exception e) {
             return "";
         }
