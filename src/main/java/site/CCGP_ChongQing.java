@@ -23,6 +23,7 @@ import static util.Download.getHttpBody;
 
 public class CCGP_ChongQing extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_ChongQing.class);
+    private static JSONObject cats;
 
     @Override
     protected void setValue() {
@@ -42,6 +43,7 @@ public class CCGP_ChongQing extends WebGeneral {
     public void run() {
         // 获取任务url
         setValue();
+        cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("chongqing_cat"));
         String[] urls = Bidding.properties.getProperty("ccgp.chongqing.url").split(",");
         this.main(urls);
         String start_time = Util.getLastMonth(null, 3), end_time = Util.getLastMonth(null, 0);
@@ -107,12 +109,6 @@ public class CCGP_ChongQing extends WebGeneral {
         }
         Document document = Jsoup.parse(httpBody);
         List<StructData> allResult = getAllResult(document, httpBody, types);
-        for (StructData data : allResult) {
-            String tempUrl = data.getArticleurl();
-            String pageSource = getHttpBody(retryTime, tempUrl);
-            Document parse = Jsoup.parse(pageSource);
-            extract(parse, data, pageSource);
-        }
         int count = 0;
         for (StructData resultData : allResult) {
             try {
@@ -283,6 +279,14 @@ public class CCGP_ChongQing extends WebGeneral {
                             json_url = "https://www.ccgp-chongqing.gov.cn/gwebsite/api/v1/notices/stable/".concat(id).concat("?__platDomain__=www.ccgp-chongqing.gov.cn");
                             break;
                     }
+                    if (type != 1) {
+                        resultData.setCat_id(cats.getIntValue(String.valueOf(type)));
+                    } else {
+                        String pw = "{\"100\":\"公开招标\",\"200\":\"邀请招标\",\"300\":\"竞争性谈判\",\"400\":\"询价\",\"500\":\"单一来源\",\"800\":\"竞争性磋商\",\"6001\":\"协议竞价\"\n" +
+                                ",\"6003\":\"网上询价\"}\n";
+                        JSONObject projectPurchaseWay = JSONObject.parseObject(pw);
+                        resultData.setCat_id(cats.getJSONObject("1").getIntValue(projectPurchaseWay.getString(jo.getString("projectPurchaseWay"))));
+                    }
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
                 } catch (Exception ignore) {
@@ -311,6 +315,22 @@ public class CCGP_ChongQing extends WebGeneral {
                     String add_time_name = formats.format(addTime);
                     resultData.setAdd_time(addTime);
                     resultData.setAdd_time_name(add_time_name);
+                    String[] info_type = new String[]{"notice", "data", "singles", "contract"};
+                    String pageSource = getHttpBody(5, json_url);
+                    JSONObject data = JSONObject.parseObject(pageSource);
+                    String htmls = null;
+                    for (String ky:info_type) {
+                        try {
+                            htmls = data.getJSONObject(ky).getString("html");
+                            break;
+                        } catch (Exception e) {
+                        }
+                    }
+                    if (htmls != null && !htmls.equals("")) {
+                        resultData.setFullcontent(htmls);
+                    } else {
+                        resultData.setFullcontent(Jsoup.parse(data.toJSONString()).html());
+                    }
                     String price = null;
                     if (jo.containsKey("money")) {
                         price = jo.getString("money");
@@ -322,17 +342,6 @@ public class CCGP_ChongQing extends WebGeneral {
                     } else if (jo.containsKey("projectBudget") && type != 6) {
                         price = jo.getString("projectBudget") + "元";
                     } else {
-                        String[] info_type = new String[]{"notice", "data", "singles", "contract"};
-                        String pageSource = getHttpBody(5, json_url);
-                        JSONObject data = JSONObject.parseObject(pageSource);
-                        String htmls = null;
-                        for (String ky:info_type) {
-                            try {
-                                htmls = data.getJSONObject(ky).getString("html");
-                                break;
-                            } catch (Exception e) {
-                            }
-                        }
                         price = getPrice(Jsoup.parse(htmls));
                     }
                     resultData.setPrice(price);
