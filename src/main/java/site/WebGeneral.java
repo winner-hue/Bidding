@@ -278,11 +278,23 @@ public class WebGeneral extends Thread {
      * @return
      */
     protected String getPrice(Document parse) {
+        String price = "";
         try {
-            return parse.select(this.priceRelu).get(0).text();
+            String[] authorRelus = this.authorRelu.split("\\|");
+            for (String authorRelu : authorRelus) {
+                try {
+                    price = parse.select(authorRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (price.length() > 0 && !price.equals("")) {
+                    break;
+                }
+            }
         } catch (Exception e) {
-            return "";
+            logger.error(e.toString());
         }
+        return price;
     }
 
     /**
