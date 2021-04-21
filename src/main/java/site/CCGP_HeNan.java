@@ -47,17 +47,32 @@ public class CCGP_HeNan extends WebGeneral {
         setValue();
         cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("henan_cat"));
         String[] urls = Bidding.properties.getProperty("ccgp.henan.url").split(",");
+//        String[] urls = new String[] {"http://www.ccgp-henan.gov.cn/henan/list2?channelCode=9102&pageNo=1&pageSize=16&bz=1&gglx=0&pageNo=1"};
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }
 
     @Override
     protected String getPrice(Document parse) {
+        String price = null;
         try {
-            return parse.select(this.priceRelu).get(0).text().replaceAll(".*项目预算金额：", "");
+            if (parse.select("td:has(p:containsOwn(（万元）))").size() > 0) {
+                double pe = 0;
+                Elements els = parse.select("td.suojin table tbody tr td:eq(4)");
+                for (Element el:els) {
+                    try {
+                        pe = pe + Double.parseDouble(el.text().replaceAll(",", ""));
+                    } catch (NumberFormatException e) {
+                    }
+                }
+                price = pe + "万元";
+            } else {
+                price = parse.select(this.priceRelu).get(0).text().replaceAll(".*项目预算金额：", "");
+            }
         } catch (Exception e) {
             return "";
         }
+        return price;
     }
 
     @Override
@@ -215,6 +230,34 @@ public class CCGP_HeNan extends WebGeneral {
             }
         }
         return allResults;
+    }
+
+    @Override
+    protected String getAuthor(Document parse) {
+        String author = "";
+        try {
+            String[] authorRelus = this.authorRelu.split("\\|");
+            for (String authorRelu : authorRelus) {
+                try {
+                    author = parse.select(authorRelu).get(0).text();
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+                if (author.length() > 0 && !author.equals("")) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+        try {
+            if (parse.outerHtml().contains("采购单位名称")) {
+                author = parse.select("table[border=1] tbody tr:eq(1) td:eq(1)").get(0).text();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return author;
     }
 
     @Override
