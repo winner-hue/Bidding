@@ -33,7 +33,7 @@ public class CCGP_TianJin extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div#crumbs a:eq(1)";
         // 采购人规则
-        authorRelu = "div:matchesOwn(1.采购人信息)+div";
+        authorRelu = "div:matchesOwn(1.采购人信息)+div,div.div:matchesOwn(采购人：)";
         // 发布时间规则
         addTimeRelu = "span.time";
         // 发布时间匹配规则
@@ -44,6 +44,7 @@ public class CCGP_TianJin extends WebGeneral {
         fjxxurlRelu = "td div a[target=_blank]";
         // 列表url节点规则
         nodeListRelu = "ul.dataList li";
+        priceRelu = "div:matchesOwn(预算金额：),div:matchesOwn(预算金额（万元）：)";
     }
 
     @Override
@@ -105,20 +106,22 @@ public class CCGP_TianJin extends WebGeneral {
 
     @Override
     protected String getAuthor(Document parse) {
+        String author = null;
         try {
-            return parse.select(authorRelu).get(0).text().replaceAll("名称：", "");
+            author = parse.select(authorRelu).get(0).text().replaceAll("名称：", "");
         } catch (Exception e) {
+            author = Util.match("1.采购单位：(.*?)\\n", parse.html())[0];
         }
-        return null;
+        if (author.contains("：")){
+            author = author.split("：")[1];
+        }
+        return author;
     }
 
     @Override
     protected String getPrice(Document parse) {
         try {
-            String html = parse.html();
-            if (html.contains("预算金额")) {
-                return Jsoup.parse(Util.match("预算金额：(.*)", parse.html())[1]).text();
-            }
+            return parse.select(authorRelu).get(0).text().split("：")[1];
         } catch (Exception ignore) {
         }
         return null;
@@ -126,12 +129,17 @@ public class CCGP_TianJin extends WebGeneral {
 
     @Override
     protected int getCatId(Document parse) {
+        int cat_id = 0;
         try {
-            String text = parse.select(this.catIdRelu).get(0).text().split("\\-")[0];
-            return cats.getIntValue(text);
+            String text = parse.select(this.catIdRelu).get(0).text();
+            cat_id = cats.getIntValue(text.split("\\-")[0]);
+            if (cat_id == 0) {
+                cat_id = cats.getIntValue(text.split("—")[0]);
+            }
         } catch (Exception e) {
             return -1;
         }
+        return cat_id;
     }
 
     @Override
