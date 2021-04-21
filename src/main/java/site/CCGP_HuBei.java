@@ -53,7 +53,7 @@ public class CCGP_HuBei extends WebGeneral {
         }
         String url = null;
         if (!href.startsWith("http")) {
-            url = "http://www.ccgp-hubei.gov.cn/" + href;
+            url = "http://www.ccgp-hubei.gov.cn" + href;
         } else {
             url = href;
         }
