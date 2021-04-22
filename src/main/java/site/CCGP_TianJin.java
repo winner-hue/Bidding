@@ -110,10 +110,13 @@ public class CCGP_TianJin extends WebGeneral {
         try {
             author = parse.select(authorRelu).get(0).text().replaceAll("名称：", "");
         } catch (Exception e) {
-            author = Util.match("1.采购单位：(.*?)\\n", parse.html())[0];
-        }
-        if (author.contains("：")){
-            author = author.split("：")[1];
+            try {
+                author = Util.match("1.采购单位：(.*?)\\n", parse.html())[0];
+                if (author.contains("：")){
+                    author = author.split("：")[1];
+                }
+            } catch (Exception exception) {
+            }
         }
         return author;
     }
