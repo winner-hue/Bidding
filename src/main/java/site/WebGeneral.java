@@ -363,15 +363,15 @@ public class WebGeneral extends Thread {
             catId = 6;
         } else if (text.contains("成交公告") || text.contains("采购结果") || text.contains("合同及验收") || text.contains("验收结果") || text.contains("结果公告")) {
             catId = 11;
-        } else if (text.contains("中标")) {
+        } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告")) {
             catId = 7;
-        } else if (text.contains("招标更正") || text.contains("更正")) {
+        } else if (text.contains("招标更正") || text.contains("更正") || text.contains("政府采购意向变更")) {
             catId = 8;
         } else if (text.contains("其他") || text.contains("废标")) {
             catId = 9;
         } else if (text.contains("竞争性磋商")) {
             catId = 10;
-        } else if (text.contains("终止") || text.contains("合同公告")) {
+        } else if (text.contains("终止")) {
             catId = 12;
         } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向") || text.contains("需求公示") || text.contains("招标预公告")) {
             catId = 13;

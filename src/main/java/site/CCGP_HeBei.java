@@ -56,6 +56,7 @@ public class CCGP_HeBei extends WebGeneral {
         List<StructData> allResults = new ArrayList<StructData>();
         Elements cListBid = parse.select(this.nodeListRelu);
         Elements urlsList = parse.select("table#moredingannctable a");
+
         for (int i = 0; i < cListBid.size(); i++) {
             Element element = cListBid.get(i);
             logger.info("===========================================");
@@ -124,8 +125,16 @@ public class CCGP_HeBei extends WebGeneral {
     @Override
     protected int getCatId(Document parse) {
         try {
-            String text = parse.select(this.catIdRelu).get(0).ownText();
-            return getCatIdByText(text);
+            Elements text = parse.select(this.catIdRelu);
+            int catIdByText = -1;
+            if (text.size() > 0) {
+                catIdByText = getCatIdByText(text.get(0).ownText());
+            }
+            if (catIdByText == -1) {
+                String textTemp = parse.select("span.txt1").get(0).parent().ownText();
+                catIdByText = getCatIdByText(textTemp);
+            }
+            return catIdByText;
         } catch (Exception e) {
             return -1;
         }
@@ -160,5 +169,34 @@ public class CCGP_HeBei extends WebGeneral {
         }
         logger.info("nextPageUrl: " + nextPageUrl);
         return nextPageUrl;
+    }
+
+    /**
+     * 获取url
+     *
+     * @param element
+     * @return url
+     */
+    protected String getUrl(Element element) {
+        Element a = element.select("a").get(0);
+        String href = a.attr("href");
+
+        if (href == null || "".equals(href)) {
+            return null;
+        }
+        if (href.startsWith("./")) {
+            href = href.substring(2);
+        }
+        if (href.startsWith("../")) {
+            href = href.substring(3);
+        }
+
+        String url = null;
+        if (!href.startsWith("http")) {
+            url = this.baseUrl.replaceAll("sjz/index_748.html", "") + href;
+        } else {
+            url = href;
+        }
+        return url;
     }
 }
