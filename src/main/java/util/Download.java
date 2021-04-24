@@ -94,7 +94,7 @@ public class Download {
         return httpBody;
     }
 
-    public static String getHttpBody(int retryTime, String url, Map<String ,String> header) {
+    public static String getHttpBody(int retryTime, String url, Map<String, String> header) {
         String httpBody = null;
         for (int i = 0; i < retryTime; i++) {
             httpBody = download(url, "UTF-8", header);
@@ -118,7 +118,7 @@ public class Download {
         return httpBody;
     }
 
-    public static String download(String url, String charSet, Map<String ,String> header) {
+    public static String download(String url, String charSet, Map<String, String> header) {
         if (url.contains("&#44")) {
             if (url.contains("&application_jsons")) {
                 /*json数据*/
@@ -152,7 +152,7 @@ public class Download {
         String[] params = split[1].split("&");
         try {
             if (content_type == 1) {
-                Map<String,Object> map = new HashMap<String,Object>();
+                Map<String, Object> map = new HashMap<String, Object>();
                 for (String param : params) {
                     String[] keyValue = param.split("=");
                     String key = keyValue[0];
@@ -207,7 +207,7 @@ public class Download {
         return null;
     }
 
-    public static String downPost(String url, String charSet, int content_type, Map<String ,String> header) {
+    public static String downPost(String url, String charSet, int content_type, Map<String, String> header) {
         if (content_type == 1) {
             url = url.replaceAll("&application_jsons", "");
         }
@@ -217,7 +217,7 @@ public class Download {
         String[] params = split[1].split("&");
         try {
             if (content_type == 1) {
-                Map<String,Object> map = new HashMap<String,Object>();
+                Map<String, Object> map = new HashMap<String, Object>();
                 for (String param : params) {
                     String[] keyValue = param.split("=");
                     String key = keyValue[0];
@@ -248,7 +248,7 @@ public class Download {
         } catch (Exception ignore) {
         }
         httpPost.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
-        for(String key:header.keySet()) {
+        for (String key : header.keySet()) {
             String value = header.get(key);
             httpPost.addHeader(key, value);
         }
@@ -305,12 +305,12 @@ public class Download {
         return null;
     }
 
-    public static String downGet(String url, String charSet, Map<String ,String> header) {
+    public static String downGet(String url, String charSet, Map<String, String> header) {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
-        for(String key:header.keySet()) {
+        for (String key : header.keySet()) {
             String value = header.get(key);
             httpGet.addHeader(key, value);
         }
@@ -329,9 +329,12 @@ public class Download {
         }
         try {
             CloseableHttpResponse response = httpClient.execute(httpGet);
-            HttpEntity entity = response.getEntity();
-            String httpBody = EntityUtils.toString(entity, charSet);
-            return httpBody;
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                HttpEntity entity = response.getEntity();
+                String httpBody = EntityUtils.toString(entity, charSet);
+                return httpBody;
+            }
         } catch (Exception e) {
             logger.error(url + " 下载失败：" + e, e);
         }
