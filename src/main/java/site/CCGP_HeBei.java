@@ -33,7 +33,7 @@ public class CCGP_HeBei extends WebGeneral {
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        fullcontentRelu = "span.txt7";
+        fullcontentRelu = "span.txt7|td.txt7";
         // 附件规则
         fjxxurlRelu = "span[id^=fujian_]";
         // 列表url节点规则
