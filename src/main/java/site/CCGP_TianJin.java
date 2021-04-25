@@ -33,7 +33,7 @@ public class CCGP_TianJin extends WebGeneral {
         // 采集类型id规则
         catIdRelu = "div#crumbs a:eq(1)";
         // 采购人规则
-        authorRelu = "div:matchesOwn(1.采购人信息)+div,div.div:matchesOwn(采购人：)";
+        authorRelu = "div:matchesOwn(1.采购人信息)+div,div:matchesOwn(采购人：)";
         // 发布时间规则
         addTimeRelu = "span.time";
         // 发布时间匹配规则

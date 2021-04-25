@@ -30,8 +30,8 @@ public class CCGP_HeNan extends WebGeneral {
     @Override
     protected void setValue() {
         titleRelu = "a";
-        authorRelu = "tr:has(td:containsOwn(采购人信息)) + tr td|td:containsOwn(采购人：)";
-        priceRelu = "td:matchesOwn(预算金额：)";
+        authorRelu = "tr:has(td:containsOwn(采购人信息)) + tr td|td:containsOwn(采购人：)|td:containsOwn(采购人（甲方）：)";
+        priceRelu = "td:matchesOwn(预算金额：),td:matchesOwn(合同金额：),span:has(span:containsOwn(预算金额：)) + span + span span span";
         addTimeRelu = "span.Gray.Right";
         addTimeParse = "yyyy-MM-dd HH:mm";
         fullcontentRelu = "table.Content";
@@ -46,8 +46,12 @@ public class CCGP_HeNan extends WebGeneral {
         // 获取任务url
         setValue();
         cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("henan_cat"));
-        String[] urls = Bidding.properties.getProperty("ccgp.henan.url").split(",");
-//        String[] urls = new String[] {"http://www.ccgp-henan.gov.cn/henan/list2?channelCode=9102&pageNo=1&pageSize=16&bz=1&gglx=0&pageNo=1"};
+//        String[] urls = Bidding.properties.getProperty("ccgp.henan.url").split(",");
+        String[] urls = new String[] {"http://www.hngp.gov.cn/henan/list2?channelCode=0101&pageNo=1&pageSize=16&bz=2&gglx=0",
+        "http://www.hngp.gov.cn/henan/list2?channelCode=0190&pageNo=1&pageSize=16&bz=2&gglx=0",
+        "http://www.hngp.gov.cn/henan/list2?channelCode=1401&pageNo=1&pageSize=16&bz=2&gglx=0",
+        "http://www.hngp.gov.cn/henan/list2?channelCode=1402&pageNo=1&pageSize=16&bz=2&gglx=0",
+        "http://www.hngp.gov.cn/henan/list2?channelCode=1301&pageNo=1&pageSize=16&bz=2&gglx=0"};
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }
@@ -148,6 +152,7 @@ public class CCGP_HeNan extends WebGeneral {
         List<StructData> allResult = getAllResult(document, httpBody, channelCode);
         for (StructData data : allResult) {
             String tempUrl = data.getArticleurl();
+            System.out.println(tempUrl);
             String pageSource = getHttpBody(retryTime, tempUrl);
             Document parse = Jsoup.parse(pageSource);
             extract(parse, data, pageSource);

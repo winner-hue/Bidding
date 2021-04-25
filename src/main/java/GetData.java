@@ -35,5 +35,6 @@ public class GetData {
 //        new CCGP_JiangSu().start();
 //        new CCGP_ZheJiang().start();
 //        new CCGP_GuangDong().start();
+        new CCGP_LiaoNing().start();
     }
 }
