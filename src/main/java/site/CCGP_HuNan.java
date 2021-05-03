@@ -31,13 +31,20 @@ public class CCGP_HuNan extends WebGeneral {
     public void run() {
         // 获取任务url
         setValue();
+        String base_url = "http://www.ccgp-hunan.gov.cn/mvc/getNoticeList4Web.do";
         String[] urlsTemp = Bidding.properties.getProperty("ccgp.hunan.url").split(",");
         String[] urls = new String[urlsTemp.length];
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String endDate = format.format(new Date(System.currentTimeMillis()));
         String startDate = format.format(new Date(System.currentTimeMillis() - 3 * 30 * 24 * 60 * 60 * 1000L));
         for (int i = 0; i < urlsTemp.length; i++) {
-            urls[i] = urlsTemp[i] + "&#44pType=&prcmPrjName=&prcmItemCode=&prcmOrgName=&startDate=" + startDate + "&endDate=" + endDate + "&prcmPlanNo=&page=1&pageSize=18";
+            if (urlsTemp[i].contains("moreCityCounty")) {
+                String noticeTypeID = Util.match("noticeTypeID=(.*)", urlsTemp[i])[1];
+                urls[i] = "http://www.ccgp-hunan.gov.cn/mvc/getNoticeListOfCityCounty.do" + "&#44nType=" + noticeTypeID + "pType=&prcmPrjName=&prcmItemCode=&prcmOrgName=&startDate=" + startDate + "&endDate=" + endDate + "&prcmPlanNo=&page=1&pageSize=18";
+            } else if (urlsTemp[i].contains("noticeTypeID")) {
+                String noticeTypeID = Util.match("noticeTypeID=(.*)", urlsTemp[i])[1];
+                urls[i] = base_url + "&#44nType=" + noticeTypeID + "pType=&prcmPrjName=&prcmItemCode=&prcmOrgName=&startDate=" + startDate + "&endDate=" + endDate + "&prcmPlanNo=&page=1&pageSize=18";
+            }
         }
         this.main(urls);
         Bidding.cout.decrementAndGet();
@@ -47,14 +54,25 @@ public class CCGP_HuNan extends WebGeneral {
     protected List<StructData> getAllResult(Document parse, String httpBody) {
         List<StructData> allResults = new ArrayList<StructData>();
         try {
-            JSONArray rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
+            JSONArray rows = null;
+            try {
+                rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
+            } catch (Exception e) {
+                rows = JSONArray.parseArray(httpBody);
+            }
             for (int i = 0; i < rows.size(); i++) {
                 logger.info("===========================================");
                 JSONObject jo = rows.getJSONObject(i);
                 StructData resultData = new StructData();
                 try {
                     String noticeId = jo.getString("NOTICE_ID");
-                    String url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId + "&area_id=";
+                    int AREA_ID = Integer.parseInt(jo.getString("AREA_ID"));
+                    String url;
+                    if (AREA_ID < 0) {
+                        url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId;
+                    } else {
+                        url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId + "&area_id=" + AREA_ID;
+                    }
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
                     String md5 = Util.stringToMD5(url);
@@ -172,7 +190,7 @@ public class CCGP_HuNan extends WebGeneral {
             title = parse.select(this.titleRelu).get(0).text();
         } catch (Exception e) {
             try {
-                title = parse.select("h1").get(0).text();
+                title = parse.select("p[align='center']").get(0).text();
             } catch (Exception ignore) {
                 title = "";
             }
