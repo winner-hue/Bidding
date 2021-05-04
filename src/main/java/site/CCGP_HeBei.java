@@ -193,8 +193,11 @@ public class CCGP_HeBei extends WebGeneral {
 
         String url = null;
         if (!href.startsWith("http")) {
-            url = "http://www.ccgp-hebei.gov.cn/" + (href.replaceAll("\\.\\./", ""));
-            logger.info("url: {}", url);
+            if (href.startsWith("../")) {
+                url = "http://www.ccgp-hebei.gov.cn/" + (href.replaceAll("\\.\\./", ""));
+            } else {
+                url = this.baseUrl + (href.replaceAll("\\./", ""));
+            }
         } else {
             url = href;
         }
