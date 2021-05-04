@@ -359,6 +359,6 @@ public class Download {
     }
 
     public static void main(String[] args) {
-        System.out.println(downGet("https://www.toutiao.com", "utf-8"));
+        System.out.println(downGet("https://www.ccgp-hainan.gov.cn/cgw/cgw_show_jzxcsgg.jsp?id=8393", "utf-8"));
     }
 }

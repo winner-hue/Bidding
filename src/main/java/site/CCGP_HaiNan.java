@@ -28,7 +28,7 @@ public class CCGP_HaiNan extends WebGeneral {
         // 价格规则
         priceRelu = "span i";
         // 内容规则
-        fullcontentRelu = "div.content01";
+        fullcontentRelu = "div.content01|div.cg20-gl table";
         // 列表url节点规则
         nodeListRelu = "div.index07_07_02 ul li";
         // 城市代码
@@ -44,7 +44,11 @@ public class CCGP_HaiNan extends WebGeneral {
         String[] urlsTemp = Bidding.properties.getProperty("ccgp.hainan.url").split(",");
         String[] urls = new String[urlsTemp.length];
         for (int i = 0; i < urlsTemp.length; i++) {
-            urls[i] = urlsTemp[i] + "&#44title=&bid_type=&proj_number=&begindate=&enddate=&zone=&currentPage=1";
+            if (urlsTemp[i].contains("cgw/cgw_list.jsp")) {
+                urls[i] = urlsTemp[i] + "&#44title=&bid_type=&proj_number=&begindate=&enddate=&zone=&currentPage=1";
+            } else {
+                urls[i] = urlsTemp[i];
+            }
         }
         this.main(urls);
         Bidding.cout.decrementAndGet();
@@ -87,6 +91,74 @@ public class CCGP_HaiNan extends WebGeneral {
                 logger.error("提取链接错误：" + e, e);
             }
         }
+
+        Elements cListBid2 = parse.select("div.zt-lm1-r-x-gl8 ul li");
+        for (Element element : cListBid2) {
+            logger.info("===========================================");
+            StructData resultData = new StructData();
+            try {
+                // 获取链接
+                String url = "https://www.ccgp-hainan.gov.cn/" + element.getElementsByTag("a").get(0).attr("href");
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
+                // 获取链接md5值， 用于排重
+                String md5 = Util.stringToMD5(url);
+                logger.info("md5: " + md5);
+                //resultData.setMd5(md5);
+                // 获取发布时间
+                String em = element.getElementsByTag("em").text().trim();
+                long addTime = new SimpleDateFormat("yyyy-MM-dd").parse(em).getTime();
+                logger.info("addTime: " + addTime);
+                if (addTime - this.deadDate.getTime() < 0) {
+                    logger.info("发布时间早于截止时间， 不添加该任务url");
+                    continue;
+                }
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
+                resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
+                resultData.setCity_id(this.cityIdRelu);
+
+                allResults.add(resultData);
+            } catch (Exception e) {
+                logger.error("提取链接错误：" + e, e);
+            }
+        }
+
+        Elements cListBid3 = parse.select("div.cg20-glR table tr");
+        for (Element element : cListBid3) {
+            logger.info("===========================================");
+            StructData resultData = new StructData();
+            try {
+                // 获取链接
+                String url = "https://www.ccgp-hainan.gov.cn/cgw/" + element.getElementsByClass("cg20-bgz").get(0).getElementsByTag("a").get(0).attr("href");
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
+                // 获取链接md5值， 用于排重
+                String md5 = Util.stringToMD5(url);
+                logger.info("md5: " + md5);
+                //resultData.setMd5(md5);
+                // 获取发布时间
+                Elements td = element.getElementsByTag("td");
+                String tempTD = td.get(td.size() - 1).text().trim();
+                long addTime = new SimpleDateFormat("yyyy-MM-dd").parse(tempTD).getTime();
+                logger.info("addTime: " + addTime);
+                if (addTime - this.deadDate.getTime() < 0) {
+                    logger.info("发布时间早于截止时间， 不添加该任务url");
+                    continue;
+                }
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String add_time_name = format.format(addTime);
+                resultData.setAdd_time(addTime);
+                resultData.setAdd_time_name(add_time_name);
+                resultData.setCity_id(this.cityIdRelu);
+
+                allResults.add(resultData);
+            } catch (Exception e) {
+                logger.error("提取链接错误：" + e, e);
+            }
+        }
+
         return allResults;
     }
 
@@ -133,8 +205,13 @@ public class CCGP_HaiNan extends WebGeneral {
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
         String nextPageUrl = "";
         try {
-            String id = Util.match("currentPage=(\\d+)", url)[1];
-            nextPageUrl = url.replaceAll("currentPage=\\d+", "currentPage=" + (Integer.parseInt(id) + 1));
+            if (url.contains("pageNo=")) {
+                String id = Util.match("pageNo=(\\d+)", url)[1];
+                nextPageUrl = url.replaceAll("pageNo=\\d+", "pageNo=" + (Integer.parseInt(id) + 1));
+            } else {
+                String id = Util.match("currentPage=(\\d+)", url)[1];
+                nextPageUrl = url.replaceAll("currentPage=\\d+", "currentPage=" + (Integer.parseInt(id) + 1));
+            }
         } catch (Exception ignore) {
         }
         logger.info("nextPageUrl: " + nextPageUrl);
