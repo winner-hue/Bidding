@@ -44,7 +44,7 @@ public class CCGP_TianJin extends WebGeneral {
         fjxxurlRelu = "td div a[target=_blank]";
         // 列表url节点规则
         nodeListRelu = "ul.dataList li";
-        priceRelu = "div:matchesOwn(预算金额：),div:matchesOwn(预算金额（万元）：)";
+        priceRelu = "";
     }
 
     @Override
