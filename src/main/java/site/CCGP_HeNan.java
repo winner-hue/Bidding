@@ -34,7 +34,7 @@ public class CCGP_HeNan extends WebGeneral {
         priceRelu = "td:matchesOwn(预算金额：),td:matchesOwn(合同金额：),span:has(span:containsOwn(预算金额：)) + span + span span span";
         addTimeRelu = "span.Gray.Right";
         addTimeParse = "yyyy-MM-dd HH:mm";
-        fullcontentRelu = "table.Content";
+        fullcontentRelu = "table.Content,body";
         fjxxurlRelu = "div.List1.Top5 a";
         nodeListRelu = "div.List2 li";
         cityIdRelu = 25;
@@ -46,12 +46,7 @@ public class CCGP_HeNan extends WebGeneral {
         // 获取任务url
         setValue();
         cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("henan_cat"));
-//        String[] urls = Bidding.properties.getProperty("ccgp.henan.url").split(",");
-        String[] urls = new String[] {"http://www.hngp.gov.cn/henan/list2?channelCode=0101&pageNo=1&pageSize=16&bz=2&gglx=0",
-        "http://www.hngp.gov.cn/henan/list2?channelCode=0190&pageNo=1&pageSize=16&bz=2&gglx=0",
-        "http://www.hngp.gov.cn/henan/list2?channelCode=1401&pageNo=1&pageSize=16&bz=2&gglx=0",
-        "http://www.hngp.gov.cn/henan/list2?channelCode=1402&pageNo=1&pageSize=16&bz=2&gglx=0",
-        "http://www.hngp.gov.cn/henan/list2?channelCode=1301&pageNo=1&pageSize=16&bz=2&gglx=0"};
+        String[] urls = Bidding.properties.getProperty("ccgp.henan.url").split(",");
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }
@@ -222,8 +217,6 @@ public class CCGP_HeNan extends WebGeneral {
                 int catid = cats.getInteger(channelCode);
                 logger.info("catId: " + catid);
                 resultData.setCat_id(catid);
-
-
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
