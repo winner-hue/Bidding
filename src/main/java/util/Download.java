@@ -105,7 +105,7 @@ public class Download {
                 }
             } catch (Exception ignore) {
             }
-            if (httpBody == null || httpBody.contains("404 Not Found")) {
+            if (httpBody == null || httpBody.contains("404 Not Found") || httpBody.contains("Failed to connect parent proxy")) {
                 logger.info("当前重试下载次数为：" + i + " " + url);
                 try {
                     Thread.sleep(2000);
