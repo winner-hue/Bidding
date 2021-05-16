@@ -10,7 +10,7 @@ public class GetData {
 //        new CCGP_TianJin().start();
 //        new CCGP_HeBei().start();
 //        new CCGP_HuBei().start();
-        new CCGP_HuNan().start();
+//        new CCGP_HuNan().start();
 //        new CCGP_ShangXi().start();
 //        new CCGP_LiaoNing().start();
 //        new CCGP_HaiNan().start();

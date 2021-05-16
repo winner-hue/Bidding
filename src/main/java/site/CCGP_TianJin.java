@@ -25,13 +25,13 @@ public class CCGP_TianJin extends WebGeneral {
 
     @Override
     protected void setValue() {
-        titleRelu = "p font b";
+        titleRelu = "meta[name='ArticleTitle']";
         // 描述规则
         descriptionRelu = "meta[name='ColumnDescription']";
 
         cityIdRelu = 23;
         // 采集类型id规则
-        catIdRelu = "div#crumbs a:eq(1)";
+        catIdRelu = "meta[name='ColumnName']";
         // 采购人规则
         authorRelu = "div:matchesOwn(1.采购人信息)+div,div:matchesOwn(采购人：)";
         // 发布时间规则
@@ -108,15 +108,19 @@ public class CCGP_TianJin extends WebGeneral {
     protected String getAuthor(Document parse) {
         String author = null;
         try {
-            author = parse.select(authorRelu).get(0).text().replaceAll("名称：", "");
+            author = parse.select(authorRelu).get(0).text().replaceAll("名称：", "").replace("名 称：", "");
         } catch (Exception e) {
             try {
                 author = Util.match("1.采购单位：(.*?)\\n", parse.html())[0];
                 if (author.contains("：")){
                     author = author.split("：")[1];
                 }
+                if (author != null) {
+                    author = author.replaceAll("名称：", "").replace("名 称：", "");
+                }
             } catch (Exception exception) {
             }
+
         }
         return author;
     }
@@ -124,7 +128,7 @@ public class CCGP_TianJin extends WebGeneral {
     @Override
     protected String getPrice(Document parse) {
         try {
-            return parse.select(authorRelu).get(0).text().split("：")[1];
+            return parse.select(this.priceRelu).get(0).text().split("：")[1];
         } catch (Exception ignore) {
         }
         return null;
@@ -134,7 +138,7 @@ public class CCGP_TianJin extends WebGeneral {
     protected int getCatId(Document parse) {
         int cat_id = 0;
         try {
-            String text = parse.select(this.catIdRelu).get(0).text();
+            String text = parse.select(this.catIdRelu).get(0).attr("content").trim();
             cat_id = cats.getIntValue(text.split("\\-")[0]);
             if (cat_id == 0) {
                 cat_id = cats.getIntValue(text.split("—")[0]);
@@ -153,4 +157,14 @@ public class CCGP_TianJin extends WebGeneral {
             return "";
         }
     }
+
+    @Override
+    protected String getTitle(Document parse) {
+        try {
+            return parse.select(this.titleRelu).get(0).attr("content").trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
 }
