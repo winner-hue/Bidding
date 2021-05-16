@@ -225,10 +225,6 @@ public class CCGP_HeiLongJiang extends WebGeneral{
             StructData resultData = new StructData();
             JSONObject jo = rows.getJSONObject(i);
             try {
-                // 获取链接
-                String url = this.baseUrl + jo.getString("pageurl") + "?noticeType=00101";
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 String hits = jo.getString("addtimeStr");
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date date = format.parse(hits);
@@ -236,9 +232,12 @@ public class CCGP_HeiLongJiang extends WebGeneral{
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
+                // 获取链接
+                String url = this.baseUrl + jo.getString("pageurl") + "?noticeType=00101";
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 String title = jo.getString("title");
                 resultData.setTitle(title);
                 resultData.setDescription(title);

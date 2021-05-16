@@ -249,24 +249,23 @@ public class CCGP_GuangDong extends WebGeneral {
             logger.info("===========================================");
             StructData resultData = new StructData();
             try {
-                String url = getUrl(element);
-                if (url.equals("") || url == null) {
-                    continue;
-                }
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 Date date = getAddTime(element);
                 long addTime = date.getTime();
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
                 resultData.setAdd_time_name(add_time_name);
+                String url = getUrl(element);
+                if (url.equals("") || url == null) {
+                    continue;
+                }
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 resultData.setCity_id(this.cityIdRelu);
                 allResults.add(resultData);
             } catch (Exception e) {

@@ -258,26 +258,25 @@ public class CCGP_ZheJiang extends WebGeneral{
                 JSONObject jo = rows.getJSONObject(i);
                 StructData resultData = new StructData();
                 try {
+                    try {
+                        Long addTime = jo.getLong("pubDate");
+                        logger.info("addTime: " + addTime);
+                        if (addTime - this.deadDate.getTime() < 0) {
+                            logger.info("发布时间早于截止时间， 不添加该任务url");
+                            return allResults;
+                        }
+                        SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                        String add_time_name = formats.format(addTime);
+                        resultData.setAdd_time(addTime);
+                        resultData.setAdd_time_name(add_time_name);
+                    } catch (Exception ignore) {
+                    }
                     String id = jo.getString("id");
                     String url = "https://zfcgmanager.czt.zj.gov.cn/cms/api/cors/remote/results?url=noticeDetail&noticeId=" + id;
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
                 } catch (Exception e) {
                     continue;
-                }
-                try {
-                    Long addTime = jo.getLong("pubDate");
-                    logger.info("addTime: " + addTime);
-                    if (addTime - this.deadDate.getTime() < 0) {
-                        logger.info("发布时间早于截止时间， 不添加该任务url");
-                        allResults.removeAll(allResults);
-                        return allResults;
-                    }
-                    SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    String add_time_name = formats.format(addTime);
-                    resultData.setAdd_time(addTime);
-                    resultData.setAdd_time_name(add_time_name);
-                } catch (Exception ignore) {
                 }
                 int catIdByText = -1;
                 try {

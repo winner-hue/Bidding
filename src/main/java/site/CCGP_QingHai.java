@@ -227,17 +227,16 @@ public class CCGP_QingHai extends WebGeneral{
             StructData resultData = new StructData();
             JSONObject jo = rows.getJSONObject(i);
             try {
-                // 获取链接
-                String url = this.baseUrl + jo.getJSONObject("_source").getString("url");
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 Long addTime = jo.getJSONObject("_source").getLong("publishDate");
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
+                // 获取链接
+                String url = this.baseUrl + jo.getJSONObject("_source").getString("url");
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 String title = jo.getJSONObject("_source").getString("title");
                 resultData.setTitle(title);
                 resultData.setDescription(title);

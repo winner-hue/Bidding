@@ -248,6 +248,27 @@ public class CCGP_ChongQing extends WebGeneral {
                 // 获取链接
                 String url = null, json_url = null;
                 try {
+                    String[] time_type = new String[]{"issueTime", "createTime", "time"};
+                    Long addTime = null;
+                    for (String ky:time_type) {
+                        try {
+                            addTime = jo.getLong(ky);
+                            if (addTime > 0) {
+                                break;
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                    logger.info("addTime: " + addTime);
+                    if (addTime - this.deadDate.getTime() < 0) {
+                        logger.info("发布时间早于截止时间， 不添加该任务url");
+                        return allResults;
+                    }
+                    logger.info("addTime: " + addTime);
+                    SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    String add_time_name = formats.format(addTime);
+                    resultData.setAdd_time(addTime);
+                    resultData.setAdd_time_name(add_time_name);
                     String title = jo.getString("title");
                     logger.info("title: " + title);
                     resultData.setTitle(title);
@@ -294,27 +315,6 @@ public class CCGP_ChongQing extends WebGeneral {
                 }
                 // 获取发布时间
                 try {
-                    String[] time_type = new String[]{"issueTime", "createTime", "time"};
-                    Long addTime = null;
-                    for (String ky:time_type) {
-                        try {
-                            addTime = jo.getLong(ky);
-                            if (addTime > 0) {
-                                break;
-                            }
-                        } catch (Exception e) {
-                        }
-                    }
-                    logger.info("addTime: " + addTime);
-                    if (addTime - this.deadDate.getTime() < 0) {
-                        logger.info("发布时间早于截止时间， 不添加该任务url");
-                        allResults.removeAll(allResults);
-                        return allResults;
-                    }
-                    SimpleDateFormat formats = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    String add_time_name = formats.format(addTime);
-                    resultData.setAdd_time(addTime);
-                    resultData.setAdd_time_name(add_time_name);
                     String[] info_type = new String[]{"notice", "data", "singles", "contract"};
                     String pageSource = getHttpBody(5, json_url);
                     JSONObject data = JSONObject.parseObject(pageSource);
@@ -358,7 +358,6 @@ public class CCGP_ChongQing extends WebGeneral {
                         }
                     }
                     resultData.setAuthor(author);
-                    logger.info("addTime: " + addTime);
                 } catch (Exception e) {
                     logger.error("获取时间错误：" + e, e);
                     continue;

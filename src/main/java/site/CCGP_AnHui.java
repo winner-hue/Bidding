@@ -210,12 +210,6 @@ public class CCGP_AnHui extends WebGeneral{
             logger.info("===========================================");
             StructData resultData = new StructData();
             try {
-                String url = getUrl(element);
-                if (url.equals("") || url == null){
-                    continue;
-                }
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 String hits = element.select(addTimeRelu).get(0).text().trim().replace("[", "").replace("]", "");
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = format.parse(hits);
@@ -223,9 +217,14 @@ public class CCGP_AnHui extends WebGeneral{
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
+                String url = getUrl(element);
+                if (url.equals("") || url == null){
+                    continue;
+                }
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 String title = element.select(titleRelu).get(0).attr("title");
                 resultData.setTitle(title);
                 resultData.setDescription(title);

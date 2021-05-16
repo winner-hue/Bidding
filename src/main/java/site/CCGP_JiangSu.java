@@ -279,13 +279,6 @@ public class CCGP_JiangSu extends WebGeneral{
             logger.info("===========================================");
             StructData resultData = new StructData();
             try {
-                // 获取链接
-                String url = getUrl(element);
-                if (url.equals("") || url == null){
-                    continue;
-                }
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 String hits = element.ownText().trim();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = format.parse(hits);
@@ -293,13 +286,19 @@ public class CCGP_JiangSu extends WebGeneral{
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
                 format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);
                 resultData.setAdd_time_name(add_time_name);
+                // 获取链接
+                String url = getUrl(element);
+                if (url.equals("") || url == null){
+                    continue;
+                }
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 resultData.setCity_id(this.cityIdRelu);
                 allResults.add(resultData);
             } catch (Exception e) {

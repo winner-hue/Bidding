@@ -199,6 +199,13 @@ public class CCGP_HeNan extends WebGeneral {
             logger.info("===========================================");
             StructData resultData = new StructData();
             try {
+                // 获取发布时间
+                long addTime = getAddTime(element).getTime();
+                logger.info("addTime: " + addTime);
+                if (addTime - this.deadDate.getTime() < 0) {
+                    logger.info("发布时间早于截止时间， 不添加该任务url");
+                    return allResults;
+                }
                 // 获取链接
                 String url = getUrl(element);
                 logger.info("url: " + url);
@@ -216,14 +223,7 @@ public class CCGP_HeNan extends WebGeneral {
                 logger.info("catId: " + catid);
                 resultData.setCat_id(catid);
 
-                // 获取发布时间
-                long addTime = getAddTime(element).getTime();
-                logger.info("addTime: " + addTime);
-                if (addTime - this.deadDate.getTime() < 0) {
-                    logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
-                    return allResults;
-                }
+
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String add_time_name = format.format(addTime);
                 resultData.setAdd_time(addTime);

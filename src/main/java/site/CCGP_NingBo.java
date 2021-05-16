@@ -291,13 +291,6 @@ public class CCGP_NingBo extends WebGeneral {
             logger.info("===========================================");
             StructData resultData = new StructData();
             try {
-                // 获取链接
-                String url = getUrl(element);
-                if (url.equals("") || url == null){
-                    continue;
-                }
-                logger.info("url: " + url);
-                resultData.setArticleurl(url);
                 String hits = element.select("td:eq(3)").get(0).text();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = format.parse(hits);
@@ -305,9 +298,15 @@ public class CCGP_NingBo extends WebGeneral {
                 logger.info("addTime: " + addTime);
                 if (addTime - this.deadDate.getTime() < 0) {
                     logger.info("发布时间早于截止时间， 不添加该任务url");
-                    allResults.removeAll(allResults);
                     return allResults;
                 }
+                // 获取链接
+                String url = getUrl(element);
+                if (url.equals("") || url == null){
+                    continue;
+                }
+                logger.info("url: " + url);
+                resultData.setArticleurl(url);
                 String title = element.select("td:eq(2) a").get(0).text();
                 resultData.setTitle(title);
                 resultData.setDescription(title);
