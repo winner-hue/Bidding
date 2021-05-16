@@ -29,7 +29,7 @@ public class CCGP_BeiJing extends WebGeneral {
         // 发布时间匹配规则
         addTimeParse = "yyyy-MM-dd";
         // 内容规则
-        fullcontentRelu = "table#queryTable|div[align=left]";
+        fullcontentRelu = "table#queryTable|div[align='left']";
         // 附件规则
         fjxxurlRelu = "table#queryTable a";
         // 列表url节点规则
@@ -111,6 +111,21 @@ public class CCGP_BeiJing extends WebGeneral {
             return getCatIdByText(split[split.length - 1]);
         } catch (Exception e) {
             return -1;
+        }
+    }
+
+    @Override
+    protected String getTitle(Document parse) {
+        try {
+            String text = "";
+            if (parse.select(this.titleRelu).size() > 0) {
+                text = parse.select(this.titleRelu).get(0).text();
+            } else  {
+                text = parse.select("span[style='font-size: 20px;font-weight: bold']").get(0).text();
+            }
+            return text;
+        } catch (Exception e) {
+            return "";
         }
     }
 }
