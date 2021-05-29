@@ -121,19 +121,7 @@ public class CCGP_LiaoNing extends WebGeneral {
                 String url = null, releaseDate = null, catIdByText = null, title = null;
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                try {
-                    long addTime = format.parse(releaseDate).getTime();
-                    logger.info("addTime: " + addTime);
-                    if (addTime - this.deadDate.getTime() < 0) {
-                        logger.info("发布时间早于截止时间， 不添加该任务url");
-                        return allResults;
-                    }
-                    String add_time_name = format.format(addTime);
-                    resultData.setAdd_time(addTime);
-                    resultData.setAdd_time_name(add_time_name);
-                    resultData.setCity_id(this.cityIdRelu);
-                } catch (Exception ignore) {
-                }
+
                 try {
                     if (channelCode.equals("getPubInfoList")) {
                         url = "http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getPubInfoViewOpenNew&infoId=".concat(jo.getString("id"));
@@ -155,10 +143,26 @@ public class CCGP_LiaoNing extends WebGeneral {
                         resultData.setAuthor(jo.getString("buyerName"));
                         resultData.setPrice(jo.getString("contractTotalPrice"));
                     }
+                    if (title.equals("") || title == null){
+                        System.out.println(rows);
+                    }
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
                 } catch (Exception e) {
                     continue;
+                }
+                try {
+                    long addTime = format.parse(releaseDate).getTime();
+                    logger.info("addTime: " + addTime);
+                    if (addTime - this.deadDate.getTime() < 0) {
+                        logger.info("发布时间早于截止时间， 不添加该任务url");
+                        return allResults;
+                    }
+                    String add_time_name = format.format(addTime);
+                    resultData.setAdd_time(addTime);
+                    resultData.setAdd_time_name(add_time_name);
+                    resultData.setCity_id(this.cityIdRelu);
+                } catch (Exception ignore) {
                 }
                 int catId = -1;
                 try {
