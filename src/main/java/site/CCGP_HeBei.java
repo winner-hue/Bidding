@@ -163,8 +163,19 @@ public class CCGP_HeBei extends WebGeneral {
     protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
         String nextPageUrl = "";
         try {
-            String id = Util.match("page=(\\d+)", url)[1];
-            nextPageUrl = url.replaceAll("page=\\d+&ch", "page=" + (Integer.parseInt(id) + 1) + "&ch");
+            if (url.endsWith("index.html")) {
+                nextPageUrl = url.replaceAll("index.html", "index_1.html");
+            } else if (Util.isMatch("index_\\d+.html", url)) {
+                int pageId = Integer.parseInt(Util.match("index_(\\d+).html", url)[1]);
+                if (pageId > 700) {
+                    nextPageUrl = url.replaceAll(".html", "_1.html");
+                } else {
+                    nextPageUrl = url.replaceAll("index_\\d+.html", "index_" + (pageId + 1) + ".html");
+                }
+            } else {
+                int pageId = Integer.parseInt(Util.match("index_\\d+_(\\d+).html", url)[1]);
+                nextPageUrl = url.replaceAll("\\d+.html", (pageId + 1) + ".html");
+            }
         } catch (Exception ignore) {
         }
         logger.info("nextPageUrl: " + nextPageUrl);
@@ -196,7 +207,7 @@ public class CCGP_HeBei extends WebGeneral {
             if (href.startsWith("../")) {
                 url = "http://www.ccgp-hebei.gov.cn/" + (href.replaceAll("\\.\\./", ""));
             } else {
-                url = this.baseUrl + (href.replaceAll("\\./", ""));
+                url = this.baseUrl.replaceAll("index.*", "") + (href.replaceAll("\\./", ""));
             }
         } else {
             url = href;

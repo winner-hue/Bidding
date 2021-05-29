@@ -37,7 +37,6 @@ public class CCGP_LiaoNing extends WebGeneral {
     public void run() {
         // 获取任务url
         setValue();
-        cats = JSONObject.parseObject(Bidding.properties_cat.getProperty("liaoning_cat"));
         String[] urls = Bidding.properties.getProperty("ccgp.liaoning.url").split(",");
         this.main(urls);
         Bidding.cout.decrementAndGet();
@@ -54,13 +53,12 @@ public class CCGP_LiaoNing extends WebGeneral {
             startRun(retryTime, url, currentPage);
         }
         Document document = Jsoup.parse(httpBody);
-        String channelCode = url.contains("getPubInfoList")? "getPubInfoList":url.contains("queryPlanYX")? "queryPlanYX": Util.match("districtCode=(.*?)&", url)[1];
-        List<StructData> allResult = getAllResult(document, httpBody, channelCode);
+        List<StructData> allResult = getAllResult(document, httpBody);
         for (StructData data : allResult) {
             String tempUrl = data.getArticleurl();
             String pageSource = null;
             int nums = 5;
-            while (nums > 0){
+            while (nums > 0) {
                 try {
                     pageSource = getHttpBody(retryTime, tempUrl);
                     if (pageSource.contains("502 Bad Gateway")) {
@@ -110,7 +108,8 @@ public class CCGP_LiaoNing extends WebGeneral {
         }
     }
 
-    protected List<StructData> getAllResult(Document parse, String httpBody, String channelCode) {
+    @Override
+    protected List<StructData> getAllResult(Document parse, String httpBody) {
         List<StructData> allResults = new ArrayList<StructData>();
         try {
             JSONArray rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
@@ -118,40 +117,13 @@ public class CCGP_LiaoNing extends WebGeneral {
                 logger.info("===========================================");
                 JSONObject jo = rows.getJSONObject(i);
                 StructData resultData = new StructData();
-                String url = null, releaseDate = null, catIdByText = null, title = null;
-
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                String id = jo.getString("id");
+                String url = "http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getPubInfoViewOpenNew&infoId=" + id;
+                resultData.setArticleurl(url);
 
                 try {
-                    if (channelCode.equals("getPubInfoList")) {
-                        url = "http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getPubInfoViewOpenNew&infoId=".concat(jo.getString("id"));
-                        releaseDate = jo.getString("releaseDate");
-                        catIdByText = jo.getString("infoTypeName");
-                        title = jo.getString("title");
-                    } else if(channelCode.contains("queryPlanYX")) {
-                        url = "http://www.ccgp-liaoning.gov.cn/plansys/plan.do?method=goPlanYX&unitId=".concat(jo.getString("unitId")).concat("&year=2021");
-                        releaseDate = jo.getString("auditTime");
-                        catIdByText = channelCode;
-                        title = jo.getString("unitName").concat(jo.getString("year").concat("年政府采购意向"));
-                        resultData.setAuthor(jo.getString("unitName"));
-                    } else {
-                        url = "http://www.ccgp-liaoning.gov.cn/portalindex.do?method=getContractPubInfo&contractId=".concat(jo.getString("contractId"));
-                        releaseDate = jo.getString("createTime");
-                        format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        catIdByText = jo.getString("district");
-                        title = jo.getString("resultInfoTitle");
-                        resultData.setAuthor(jo.getString("buyerName"));
-                        resultData.setPrice(jo.getString("contractTotalPrice"));
-                    }
-                    if (title.equals("") || title == null){
-                        System.out.println(rows);
-                    }
-                    logger.info("url: " + url);
-                    resultData.setArticleurl(url);
-                } catch (Exception e) {
-                    continue;
-                }
-                try {
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                    String releaseDate = jo.getString("releaseDate");
                     long addTime = format.parse(releaseDate).getTime();
                     logger.info("addTime: " + addTime);
                     if (addTime - this.deadDate.getTime() < 0) {
@@ -166,13 +138,15 @@ public class CCGP_LiaoNing extends WebGeneral {
                 }
                 int catId = -1;
                 try {
-                    catId = cats.getInteger(catIdByText);
+                    String catIdByText = jo.getString("infoTypeName");
+                    catId = getCatIdByText(catIdByText);
                     logger.info("catId: " + catId);
                 } catch (Exception ignore) {
                 }
                 resultData.setCat_id(catId);
                 logger.info("cityId: " + this.cityIdRelu);
                 resultData.setCity_id(this.cityIdRelu);
+                String title = jo.getString("title");
                 logger.info("title: " + title);
                 resultData.setTitle(title);
                 resultData.setDescription(title);
@@ -209,7 +183,7 @@ public class CCGP_LiaoNing extends WebGeneral {
             String purchaser = null;
             try {
                 purchaser = getAuthor(newHtmlParse);
-                purchaser = purchaser.contains("：")? purchaser.split("：")[1]: purchaser;
+                purchaser = purchaser.contains("：") ? purchaser.split("：")[1] : purchaser;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -254,7 +228,7 @@ public class CCGP_LiaoNing extends WebGeneral {
             if (parse.select("td:containsOwn(预算金额（万元）)").size() > 0) {
                 double pe = 0;
                 Elements els = parse.select("tbody tr td:eq(3)");
-                for (Element el:els) {
+                for (Element el : els) {
                     try {
                         pe = pe + Double.parseDouble(el.text().replaceAll(",", ""));
                     } catch (NumberFormatException e) {
@@ -267,7 +241,7 @@ public class CCGP_LiaoNing extends WebGeneral {
         } catch (Exception e) {
             return "";
         }
-        price = Util.HasDigit(price)?price.contains("：")? price.split("：")[1]: price: price;
+        price = Util.HasDigit(price) ? price.contains("：") ? price.split("：")[1] : price : price;
         return price;
     }
 }

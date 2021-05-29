@@ -12,7 +12,7 @@ public class GetData {
 //        new CCGP_HuBei().start();
 //        new CCGP_HuNan().start();
 //        new CCGP_ShangXi().start();
-        new CCGP_LiaoNing().start();
+//        new CCGP_LiaoNing().start();
 //        new CCGP_HaiNan().start();
 //        new CCGP_NeiMengGu().start();
 //        new CCGP_HuNan().start();
@@ -36,5 +36,6 @@ public class GetData {
 //        new CCGP_ZheJiang().start();
 //        new CCGP_GuangDong().start();
 //        new CCGP_LiaoNing().start();
+        new CCGP_ChongQing().start();
     }
 }

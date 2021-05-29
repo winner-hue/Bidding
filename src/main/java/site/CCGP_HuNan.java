@@ -23,7 +23,7 @@ public class CCGP_HuNan extends WebGeneral {
     protected void setValue() {
         titleRelu = "p.danyi_title";
         priceRelu = "td:matchesOwn(预算金额：)";
-        fullcontentRelu = "tbody tr";
+        fullcontentRelu = "body";
         cityIdRelu = 19;
     }
 
@@ -73,8 +73,10 @@ public class CCGP_HuNan extends WebGeneral {
                     } else {
                         url = "http://www.ccgp-hunan.gov.cn/mvc/viewNoticeContent.do?noticeId=" + noticeId + "&area_id=" + AREA_ID;
                     }
+                    String title = jo.getString("NOTICE_TITLE");
                     logger.info("url: " + url);
                     resultData.setArticleurl(url);
+                    resultData.setTitle(title);
                     String md5 = Util.stringToMD5(url);
                     logger.info("md5: " + md5);
 //                    //resultData.setMd5(md5);
@@ -142,9 +144,7 @@ public class CCGP_HuNan extends WebGeneral {
                 Elements elements = parse.select(fullcontentRelu);
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < elements.size(); i++) {
-                    if (i > 0) {
-                        builder.append(elements.get(i).html());
-                    }
+                    builder.append(elements.get(i).html());
                 }
                 content = builder.toString();
             } catch (Exception ignore) {
@@ -158,9 +158,9 @@ public class CCGP_HuNan extends WebGeneral {
     @Override
     protected void extract(Document parse, StructData data, String pageSource) {
         logger.info("==================================");
-        String title = getTitle(parse);
-        logger.info("title: " + title);
-        data.setTitle(title);
+//        String title = getTitle(parse);
+//        logger.info("title: " + title);
+//        data.setTitle(title);
         String description = getDescription(parse);
         logger.info("description: " + description);
         data.setDescription(description);

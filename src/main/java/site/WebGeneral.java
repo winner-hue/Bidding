@@ -365,7 +365,7 @@ public class WebGeneral extends Thread {
             catId = 11;
         } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告")) {
             catId = 7;
-        } else if (text.contains("招标更正") || text.contains("更正") || text.contains("政府采购意向变更")) {
+        } else if (text.contains("招标更正") || text.contains("更正") || text.contains("政府采购意向变更") || text.contains("变更公告")) {
             catId = 8;
         } else if (text.contains("其他") || text.contains("废标")) {
             catId = 9;
@@ -375,7 +375,7 @@ public class WebGeneral extends Thread {
             catId = 12;
         } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向") || text.contains("需求公示") || text.contains("招标预公告")) {
             catId = 13;
-        } else if (text.contains("竞价") || text.contains("网上询价")) {
+        } else if (text.contains("竞价") || text.contains("网上询价") || text.contains("协议竞价")) {
             catId = 14;
         }
 
@@ -444,9 +444,16 @@ public class WebGeneral extends Thread {
     protected Date getAddTime(Element element) {
         Date parse = null;
         try {
-            String addTime = element.select(this.addTimeRelu).get(0).text();
-            SimpleDateFormat format = new SimpleDateFormat(this.addTimeParse);
-            parse = format.parse(addTime);
+            if (element.select(this.addTimeRelu).size() > 0) {
+                String addTime = element.select(this.addTimeRelu).get(0).text();
+                SimpleDateFormat format = new SimpleDateFormat(this.addTimeParse);
+                parse = format.parse(addTime);
+            } else {
+                String addTime = element.select("span.docRelTime").get(0).text();
+                SimpleDateFormat format = new SimpleDateFormat(this.addTimeParse);
+                parse = format.parse(addTime);
+            }
+
         } catch (Exception e) {
             logger.error("获取日期错误：" + e, e);
         }
