@@ -361,9 +361,10 @@ public class WebGeneral extends Thread {
             catId = 5;
         } else if (text.contains("邀请招标") || text.contains("邀请公告")) {
             catId = 6;
-        } else if (text.contains("成交公告") || text.contains("采购结果") || text.contains("合同及验收") || text.contains("验收结果") || text.contains("结果公告")) {
+        } else if (text.contains("成交公告") || text.contains("采购结果") || text.contains("合同及验收") || text.contains("验收结果") || text.contains("结果公告")
+                || text.contains("验收公开")) {
             catId = 11;
-        } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告")) {
+        } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告") || text.contains("合同公示")) {
             catId = 7;
         } else if (text.contains("招标更正") || text.contains("更正") || text.contains("政府采购意向变更") || text.contains("变更公告")) {
             catId = 8;
@@ -373,7 +374,8 @@ public class WebGeneral extends Thread {
             catId = 10;
         } else if (text.contains("终止")) {
             catId = 12;
-        } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向") || text.contains("需求公示") || text.contains("招标预公告")) {
+        } else if (text.contains("招标预告") || text.contains("采购需求征求意见") || text.contains("采购意向") || text.contains("需求公示") || text.contains("招标预公告")
+                || text.contains("意向公开") || text.contains("(意向)公开")) {
             catId = 13;
         } else if (text.contains("竞价") || text.contains("网上询价") || text.contains("协议竞价")) {
             catId = 14;
