@@ -364,7 +364,7 @@ public class WebGeneral extends Thread {
         } else if (text.contains("成交公告") || text.contains("采购结果") || text.contains("合同及验收") || text.contains("验收结果") || text.contains("结果公告")
                 || text.contains("验收公开")) {
             catId = 11;
-        } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告") || text.contains("合同公示")) {
+        } else if (text.contains("中标") || text.contains("合同详情") || text.contains("合同公告") || text.contains("合同公示") || text.contains("合同公开")) {
             catId = 7;
         } else if (text.contains("招标更正") || text.contains("更正") || text.contains("政府采购意向变更") || text.contains("变更公告")) {
             catId = 8;
