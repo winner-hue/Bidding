@@ -22,315 +22,84 @@ import static util.Download.getHttpBody;
 
 public class CCGP_YunNan extends WebGeneral {
     private static Logger logger = LoggerFactory.getLogger(CCGP_YunNan.class);
-    private static HashMap<String, String> heads = new HashMap<String, String>();
-    private static String relu = "{'1': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'div.table table tbody tr td:containsOwn(预算金额) + td|label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '4': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td|label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '3': {'authorRelu': 'label:containsOwn(预算单位：) + div|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'label:containsOwn(预算金额：) + div|label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div.panel-body'},\n" +
-            "      '5': {'authorRelu': 'label:containsOwn(预算单位：) + div|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'label:containsOwn(预算金额：) + div|label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div#searchPanel'},\n" +
-            "      '2': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总成交金额) + td|label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '7': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span',\n" +
-            "            'priceRelu': 'label:containsOwn(合同金额：) + div span',\n" +
-            "            'fullcontentRelu': 'div.vF_detail_content'},\n" +
-            "      '6': {'authorRelu': 'div.table table tbody tr td:containsOwn(采购单位) + td|label:containsOwn(采购人（甲方）：) + div span|p:containsOwn(采购单位名称:) span',\n" +
-            "            'priceRelu': 'div.table table tbody tr td:containsOwn(总中标金额) + td|label:containsOwn(合同金额：) + div span|div.table table tbody tr td:containsOwn(总成交金额) + td|p:containsOwn(采购计划金额（元）:) span',\n" +
-            "            'fullcontentRelu': 'div.divcss5|form#institutionForm5|div#searchPanel'}\n" +
-            "      }";
-    public static JSONObject relus = JSONObject.parseObject(relu);
+
+
+    @Override
+    protected void setValue() {
+        titleRelu = "div.div_hui+div";
+        // 描述规则
+        descriptionRelu = "";
+        // 采集类型id规则
+        catIdRelu = "div.div_hui";
+        // 城市id规则
+        cityIdRelu = 2;
+        // 采购人规则
+        authorRelu = "";
+        // 价格规则
+        priceRelu = "";
+        // 发布时间规则
+        addTimeRelu = "span.datetime";
+        // 发布时间匹配规则
+        addTimeParse = "yyyy-MM-dd";
+        // 内容规则
+        fullcontentRelu = "div.table|div.panel.panel-default|form#institutionForm5";
+        // 附件规则
+        fjxxurlRelu = "table#queryTable a";
+    }
 
     @Override
     public void run() {
         setValue();
-        heads.put("Referer", "http://www.ccgp-yunnan.gov.cn/bulletin.do?method=moreList");
-        String url = "http://www.ccgp-yunnan.gov.cn/bulletin.do?method=moreListQuery";
-        final String[] query_signs = {"1", "4", "3", "5", "2", "7", "6"}, urls = new String[query_signs.length];
-//        final String[] query_signs = {"6"}, urls = new String[query_signs.length];
-        for (int i = 0; i < query_signs.length; i++) {
-            urls[i] = url.concat("&#44current=1&rowCount=20&query_sign=".concat(query_signs[i]));
-        }
+        String[] urls = Bidding.properties.getProperty("ccgp.yunnan.url").split(",");
         this.main(urls);
         Bidding.cout.decrementAndGet();
     }
 
     @Override
-    protected void setValue() {
-        cityIdRelu = 2;
+    protected List<StructData> getAllResult(Document parse, String httpBody) {
+        List<StructData> datas = new ArrayList<StructData>();
+        JSONObject jo = JSONObject.parseObject(httpBody);
+        JSONArray rows = jo.getJSONArray("rows");
+        for (int i = 0; i < rows.size(); i++) {
+            StructData data = new StructData();
+            JSONObject jsonObject = rows.getJSONObject(i);
+            String finishday = jsonObject.getString("finishday");
+            data.setAdd_time_name(finishday);
+            String bulletintitle = jsonObject.getString("bulletintitle");
+            data.setTitle(bulletintitle);
+            String bulletinclasschina = jsonObject.getString("bulletinclasschina");
+            int catIdByText = getCatIdByText(bulletinclasschina);
+            data.setCat_id(catIdByText);
+            data.setCity_id(this.cityIdRelu);
+            String bulletin_id = jsonObject.getString("bulletin_id");
+            String url = "http://www.yngp.com/bulletin_zz.do?method=shownotice&bulletin_id=" + bulletin_id;
+            data.setArticleurl(url);
+            datas.add(data);
+            logger.info("title: " + data.getTitle());
+            logger.info("catid: " + data.getCat_id());
+        }
+        return datas;
     }
 
     @Override
-    protected void main(String[] urls) {
-        int retryTime = 3;
-        SimpleDateFormat format = null;
-        try {
-            String retryTimes = Bidding.properties.getProperty("download_retry_times");
-            retryTime = Integer.parseInt(retryTimes);
-        } catch (Exception ignore) {
-        }
-        try {
-            String deadDateParse = Bidding.properties.getProperty("dead.date");
-            format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Date parse = format.parse(deadDateParse);
-            long time = parse.getTime();
-            this.deadDate = new Date(time);
-        } catch (Exception ignore) {
-            try {
-                format = new SimpleDateFormat("yyyy-MM-dd");
-                this.deadDate = format.parse(Util.getLastMonth(null, 3));
-//                this.deadDate = format.parse("2021-03-11");
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        for (String url : urls) {
-            logger.info("当前开始url： " + url);
-            this.baseUrl = url;
-            startRun(retryTime, url, 0);
-        }
-    }
-
-    protected String getNextPageUrl(int currentPage, String url) {
-        return url.replaceAll("current=(\\d+)", "current=" + (currentPage + 1));
-    }
-
-    @Override
-    protected void startRun(int retryTime, String url, int currentPage) {
-        boolean lx = false;
-        String httpBody = getHttpBody(retryTime, url);
-        if (httpBody == null) {
-            logger.error("下载失败， 直接返回为空");
-            return;
-        }
-        String query_sign = Util.match("query_sign=(\\d+)", url)[1];
-        List<StructData> allResult = getAllResult(httpBody, retryTime, lx);
-        for (StructData data : allResult) {
-            String tempUrl = data.getArticleurl();
-            String pageSource = "";
-            try {
-                pageSource = getHttpBody(retryTime, tempUrl, heads);
-            } catch (Exception e) {
-                logger.error(e.toString());
-            }
-            Document parse = Jsoup.parse(pageSource);
-            extract(parse, data, query_sign);
-        }
-        int count = 0;
-        for (StructData resultData : allResult) {
-            try {
-                String sql;
-                String tableName = Bidding.properties.getProperty("table.name");
-                if (tableName == null) {
-                    sql = Util.getInsertSql("fa_article", StructData.class, resultData);
-                } else {
-                    sql = Util.getInsertSql(tableName, StructData.class, resultData);
-                }
-                SqlPool.getInstance().getStatement().execute(sql);
-                logger.info("当前插入第：" + count + " 条");
-                ++count;
-            } catch (SQLException e) {
-                logger.error("插入数据错误：" + e, e);
-            }
-        }
-        logger.info("插入成功：" + count + " 条");
-        //添加下一页
-        if ((allResult.size() - count <= allResult.size() - 1) && (allResult.size() > 0) && lx == false) {
-            try {
-                try {
-                    currentPage = Integer.parseInt(Util.match("current=(\\d+)&", url)[1]);
-                } catch (Exception ignore) {
-                }
-                String nextPageUrl = getNextPageUrl(currentPage, url);
-                if (nextPageUrl != null && (!"".equals(nextPageUrl))) {
-                    startRun(retryTime, nextPageUrl, (currentPage + 1));
-                }
-            } catch (Exception e) {
-                logger.error("下一页提取错误：" + e, e);
-            }
-        }
-    }
-
-    @Override
-    protected void extract(Document parse, StructData data, String query_sign) {
+    protected void extract(Document parse, StructData data, String pageSource) {
         logger.info("==================================");
-        String description = data.getTitle();
-        logger.info("description: " + description);
-        data.setDescription(description);
-        int cityId = cityIdRelu;
-        logger.info("cityId: " + cityId);
-        data.setCity_id(cityId);
-        String author = getAuthor(parse, query_sign);
-        logger.info("author: " + author);
-        data.setAuthor(author);
-        String price = getPrice(parse, query_sign);
-        logger.info("price: " + price);
-        data.setPrice(price);
-        String detail = getDetail(parse, query_sign);
+        String detail = getDetail(parse);
         logger.info("detail: " + detail);
         data.setFullcontent(detail);
-        String annex = getAnnex(parse);
-        logger.info("annex: " + annex);
-        data.setFjxxurl(annex);
     }
+
 
     @Override
-    protected String getAnnex(Document parse) {
-        return null;
-    }
-
-    protected String getDetail(Document parse, String query_sign) {
-        String detail_str = null;
-        String[] fullcontentRelus = relus.getJSONObject(query_sign).getString("fullcontentRelu").split("\\|");
+    protected String getNextPageUrl(Document document, int currentPage, String httpBody, String url) {
+        String nextPageUrl = "";
         try {
-            for (String fullcontentRelu : fullcontentRelus) {
-                detail_str = parse.select(fullcontentRelu).html();
-                if (detail_str.length() > 0) {
-                    detail_str = detail_str.replaceAll("\\'", "\\\\'");
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.toString());
-        }
-        return detail_str;
-    }
+            String id = Util.match("current=(\\d+)", url)[1];
+            nextPageUrl = url.replaceAll("current=\\d+", "current=" + (Integer.parseInt(id) + 1));
 
-    protected String getPrice(Document parse, String query_sign) {
-        String price_str = "";
-        String[] priceRelus = relus.getJSONObject(query_sign).getString("priceRelu").split("\\|");
-        try {
-            for (String priceRelu : priceRelus) {
-                try {
-                    price_str = parse.select(priceRelu).get(0).text();
-                } catch (Exception e) {
-                    logger.error(e.toString());
-                }
-                if (price_str.length() > 0) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.toString());
+        } catch (Exception ignore) {
         }
-        return price_str;
-    }
-
-    protected String getAuthor(Document parse, String query_sign) {
-        String author = "";
-        String[] authorRelus = relus.getJSONObject(query_sign).getString("authorRelu").split("\\|");
-        try {
-            for (String authorRelu : authorRelus) {
-                try {
-                    author = parse.select(authorRelu).get(0).text();
-                } catch (Exception e) {
-                    logger.error(e.toString());
-                }
-                if (author.length() > 0) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.toString());
-        }
-        return author;
-    }
-
-    @Override
-    protected String getDescription(Document parse) {
-        return super.getDescription(parse);
-    }
-
-    protected List<StructData> getAllResult(String httpBody, int retryTime, boolean lx) {
-        List<StructData> allResults = new ArrayList<StructData>();
-        try {
-            JSONArray rows = JSONObject.parseObject(httpBody).getJSONArray("rows");
-            for (int i = 0; i < rows.size(); i++) {
-                logger.info("===========================================");
-                JSONObject jo = rows.getJSONObject(i);
-                StructData resultData = new StructData();
-                if (jo.getString("finishday").length() < 1 || jo.getString("bulletin_id").length() <= 4 || jo.getString("bulletin_id").equals("sjdwcghtgg")) {
-                    lx = true;
-                    continue;
-                }
-                try {
-                    String url = showUrl(jo.getString("bulletin_id"), jo.getString("bulletinclass"), jo.getString("tabletype"));
-                    if (jo.getString("tabletype").equals("6")) {
-                        try {
-                            String pageSource = getHttpBody(retryTime, url, heads);
-                            Document parse = Jsoup.parse(pageSource);
-                            String urlx = parse.select("input#placardurl").get(0).attr("value");
-                            if (urlx.startsWith("http")) {
-                                url = urlx;
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    logger.info("url: " + url);
-                    resultData.setArticleurl(url);
-                } catch (Exception e) {
-                    continue;
-                }
-                try {
-                    String hits = jo.getString("finishday");
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    Date date = format.parse(hits);
-                    long addTime = date.getTime();
-                    logger.info("addTime: " + addTime);
-                    if (addTime - this.deadDate.getTime() < 0) {
-                        logger.info("发布时间早于截止时间， 不添加该任务url");
-                        break;
-                    }
-                    format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    String add_time_name = format.format(addTime);
-                    resultData.setAdd_time(addTime);
-                    resultData.setAdd_time_name(add_time_name);
-                } catch (Exception ignore) {
-                }
-                int catIdByText = -1;
-                try {
-                    String catId = jo.getString("bulletinclasschina");
-                    catIdByText = getCatIdByText(catId);
-                    logger.info("catId: " + catIdByText);
-                } catch (Exception ignore) {
-                }
-                resultData.setCat_id(catIdByText);
-                logger.info("cityId: " + cityIdRelu);
-                resultData.setCity_id(cityIdRelu);
-                String title = jo.getString("bulletintitle");
-                resultData.setTitle(title);
-                allResults.add(resultData);
-            }
-        } catch (Exception e) {
-            logger.error("获取json失败：" + e, e);
-        }
-        return allResults;
-    }
-
-    protected String showUrl(String bulletin_id, String bulletinclass, String tabletype) {
-        String host_url = "http://www.ccgp-yunnan.gov.cn", url = "";
-        if (bulletin_id.length() > 0 && "sddfucggg".equals(bulletin_id)) {
-            url = host_url + "/governmentpolicy.do?method=designatedServiceMain";
-        } else {
-            if (tabletype.equals("3") || tabletype.equals("4")) {
-                if (bulletinclass.length() > 0 && bulletinclass.equals("bxlx014")) {
-                    url = host_url + "/contract.do?method=showContractDetail&bulletinclass=bxlx014&bulletin_id=" + bulletin_id;
-                } else {
-                    url = host_url + "/bulletin_zz.do?method=shownotice&bulletin_id=" + bulletin_id;
-                }
-            } else if (tabletype.equals("5")) {
-                url = host_url + "/bulletin_zz.do?method=showBulletin&bulletin_id=" + bulletin_id + "&sign=5";
-            } else {
-                url = host_url + "/bulletin_zz.do?method=showBulletin&bulletin_id=" + bulletin_id + "&bulletinclass=" + bulletinclass;
-            }
-        }
-        return url;
+        logger.info("nextPageUrl: " + nextPageUrl);
+        return nextPageUrl;
     }
 }

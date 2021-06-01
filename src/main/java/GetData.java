@@ -38,6 +38,7 @@ public class GetData {
 //        new CCGP_LiaoNing().start();
 //        new CCGP_ChongQing().start();
 //        new CCGP_ShanDong().start();
-        new CCGP_JiangXi().start();
+//        new CCGP_JiangXi().start();
+        new CCGP_YunNan().start();
     }
 }

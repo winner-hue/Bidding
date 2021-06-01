@@ -185,7 +185,7 @@ public class Download {
         httpPost.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpPost.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
@@ -193,7 +193,7 @@ public class Download {
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         } else {
-            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpPost.setConfig(config);
         }
         try {
@@ -254,7 +254,7 @@ public class Download {
         }
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpPost.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
@@ -262,7 +262,7 @@ public class Download {
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         } else {
-            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpPost.setConfig(config);
         }
         try {
@@ -283,7 +283,7 @@ public class Download {
         httpGet.addHeader("User-Agent", userAgent[new Random().nextInt(userAgent.length)]);
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpGet.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
@@ -291,7 +291,7 @@ public class Download {
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         } else {
-            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpGet.setConfig(config);
         }
         try {
@@ -316,7 +316,7 @@ public class Download {
         }
         if (proxy.getHost() != null) {
             HttpHost host = new HttpHost(proxy.getHost(), proxy.getPort());
-            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setProxy(host).setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpGet.setConfig(config);
             if (proxy.getUser() != null) {
                 CredentialsProvider provider = new BasicCredentialsProvider();
@@ -324,7 +324,7 @@ public class Download {
                 httpClient = HttpClients.custom().setDefaultCredentialsProvider(provider).setSSLSocketFactory(customSSLConnection()).build();
             }
         } else {
-            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
+            RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(30000).setConnectTimeout(30000).setSocketTimeout(30000).build();
             httpGet.setConfig(config);
         }
         try {
